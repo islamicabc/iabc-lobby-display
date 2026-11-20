@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IABC Lobby Display</title>
+<link rel="icon" href="assets/icon.png">
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0e2337"/><g fill="none" stroke="var(--gold,#d8b25a)" stroke-width="3.2" stroke-linecap="round"><path d="M38 68V47a12 12 0 0 1 24 0v21"/><path d="M50 35V29"/><path d="M30 68h40"/></g><circle cx="50" cy="25" r="2.6" fill="var(--gold,#d8b25a)"/></svg>
+</template>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,700&family=Public+Sans:wght@400;600;700&family=Manrope:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="./content.js"></script>
+<script src="./prayer-data.js"></script>
+<script src="./adhan-times.js"></script>
+<script src="./sheet.js"></script>
+<script src="./fund-graphics.js"></script>
+<script src="./leaderboard-data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow: hidden; background: var(--page,#07131c); }
+  a { color: var(--blue,#52a6dc); text-decoration: none; }
+  a:hover { color: var(--blueLt,#7cc6ee); }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes softpulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position:fixed;inset:0;background:var(--page,#07131c);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Manrope',system-ui,sans-serif;">
+ <div style="width:1920px;height:1080px;flex:none;transform:{{ fitScale }};transform-origin:center;display:flex;background:linear-gradient(155deg,var(--bg1,#0b1f30),var(--bg2,#143650));color:var(--ink,#e9f1f7);">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside style="width:476px;flex:none;height:100%;position:relative;padding:20px 18px 18px;display:flex;flex-direction:column;gap:9px;background:var(--sidebar,rgba(0,0,0,.22));border-right:1px solid var(--line1,rgba(255,255,255,.08));">
+
+    <div style="display:none;" aria-hidden="true">
+      <img data-asset="assets/logo.png" src="assets/logo.png" alt="">
+      <img data-asset="assets/qr-donate.png" src="assets/qr-donate.png" alt="">
+      <img data-asset="assets/qr-website.png" src="assets/qr-website.png" alt="">
+      <img data-asset="assets/campus1.jpg" src="assets/campus1.jpg" alt="">
+      <img data-asset="assets/campus2.jpg" src="assets/campus2.jpg" alt="">
+      <img data-asset="assets/b4-floor1.png" src="assets/b4-floor1.png" alt="">
+      <img data-asset="assets/b4-floor2.png" src="assets/b4-floor2.png" alt="">
+      <img data-asset="assets/homes-near-masjid.png" src="assets/homes-near-masjid.png" alt="">
+      <img data-asset="assets/icon.png" src="assets/icon.png" alt="">
+    </div>
+
+    <!-- Logo and clock share one row to reclaim ~120px of sidebar height. -->
+    <div style="display:flex;align-items:center;gap:14px;flex:none;">
+      <div style="background:#fff;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.25);">
+        <img src="assets/logo.png" alt="Islamic Academy of Burlington County" style="width:128px;height:auto;object-fit:contain;display:block;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;">
+        <div style="display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:48px;font-weight:800;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums;">{{ clockHM }}</span>
+          <span style="font-size:19px;font-weight:700;color:var(--muted,#8fa7bb);font-variant-numeric:tabular-nums;">{{ clockS }}</span>
+          <span style="font-size:17px;font-weight:700;color:var(--blue,#52a6dc);">{{ clockAP }}</span>
+        </div>
+        <div style="font-size:17px;color:var(--ink5,#b7c8d6);font-weight:600;">{{ dateGreg }}</div>
+        <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">
+          <span dir="rtl" style="font-family:'Noto Naskh Arabic',serif;font-size:19px;font-weight:700;color:var(--gold,#d8b25a);line-height:1.5;">{{ dateHijriAr }}</span>
+          <span style="font-size:18px;color:var(--gold,#d8b25a);font-weight:700;line-height:1.25;">{{ dateHijri }}</span>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:{{ hijriNoteColor }};letter-spacing:.2px;line-height:1.35;margin-top:3px;text-wrap:pretty;">{{ hijriNote }}</div>
+      </div>
+    </div>
+
+    <!-- Weather sits on its own full-width row so any description length fits. -->
+    <sc-if value="{{ hasWeather }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:10px;flex:none;align-self:stretch;padding:9px 16px;border-radius:999px;background:var(--surf2,rgba(255,255,255,.05));border:1px solid var(--line1,rgba(255,255,255,.08));">
+        <span style="font-size:20px;line-height:1;flex:none;">{{ weatherIcon }}</span>
+        <span style="font-size:19px;font-weight:800;color:var(--ink,#e9f1f7);font-variant-numeric:tabular-nums;flex:none;">{{ weatherTemp }}</span>
+        <span style="font-size:16px;font-weight:600;color:var(--muted2,#9fb3c4);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ weatherDesc }}</span>
+        <sc-if value="{{ hasWxToday }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:14px;font-weight:700;color:var(--ink5,#b7c8d6);white-space:nowrap;flex:none;padding-left:10px;border-left:1px solid var(--line1,rgba(255,255,255,.08));">{{ wxToday }}</span>
+        </sc-if>
+        <sc-if value="{{ hasWxTmrw }}" hint-placeholder-val="{{ false }}">
+          <span style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:var(--muted3,#7c93a6);white-space:nowrap;flex:none;padding-left:10px;border-left:1px solid var(--line1,rgba(255,255,255,.08));">
+            <span style="font-size:15px;line-height:1;">{{ wxTmrwIcon }}</span>{{ wxTmrw }}
+          </span>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div style="background:var(--nextCard,rgba(82,166,220,.13));border:1px solid var(--nextLn,rgba(82,166,220,.32));border-top:5px solid {{ nextAccent }};border-radius:14px;padding:13px 18px 14px;flex:none;box-shadow:0 4px 22px rgba(0,0,0,.22);display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:18px;row-gap:4px;align-items:end;">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:0;align-self:start;">
+          <div style="font-size:13px;letter-spacing:3px;color:{{ nextAccent }};font-weight:800;">{{ nextKicker }}</div>
+          <span style="font-size:17px;font-weight:600;color:var(--ink5,#b7c8d6);margin-top:4px;">{{ nextIqNote }}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:12px;justify-self:end;align-self:start;">
+          <span style="font-family:'Marcellus',serif;font-size:34px;line-height:1;">{{ nextLabel }}</span>
+          <span style="font-family:'Noto Naskh Arabic',serif;font-size:31px;line-height:1.15;color:var(--blueLt,#7cc6ee);">{{ nextArabic }}</span>
+        </div>
+        <!-- Spans the full card width so "SECOND ADHĀN & KHUṬBAH" never wraps. -->
+        <span style="grid-column:1 / -1;font-size:12px;letter-spacing:1.6px;font-weight:800;color:var(--muted2,#9fb3c4);white-space:nowrap;margin-top:4px;">{{ nextIqLabel }}</span>
+        <div style="display:flex;align-items:baseline;gap:3px;color:{{ nextAccent }};">
+          <span style="font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-.5px;font-variant-numeric:tabular-nums;">{{ nextIqTimeNum }}</span>
+          <span style="font-size:19px;font-weight:700;letter-spacing:.3px;opacity:.8;">{{ nextIqTimeAp }}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:5px;justify-self:end;">
+          <span style="font-size:34px;font-weight:800;color:{{ countdownColor }};font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1;">{{ countdown }}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--muted,#8fa7bb);">{{ countdownLabel }}</span>
+          <sc-if value="{{ praying }}" hint-placeholder-val="{{ false }}">
+            <svg width="42" height="42" viewBox="0 0 48 48" fill="none" style="display:block;align-self:center;">
+              <rect x="15" y="5" width="18" height="38" rx="3.5" stroke="var(--greenLn,#5fd08a)" stroke-width="2.6"></rect>
+              <line x1="21" y1="38.5" x2="27" y2="38.5" stroke="var(--greenLn,#5fd08a)" stroke-width="2.6" stroke-linecap="round"></line>
+              <circle cx="24" cy="24" r="21" stroke="var(--greenLn,#5fd08a)" stroke-width="3"></circle>
+              <line x1="9" y1="39" x2="39" y2="9" stroke="var(--greenLn,#5fd08a)" stroke-width="3" stroke-linecap="round"></line>
+            </svg>
+          </sc-if>
+        </div>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:2px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;font-size:12.5px;letter-spacing:2.2px;color:var(--muted3,#7c93a6);font-weight:800;padding:0 12px 0;margin-top:5px;">
+        <span>PRAYER</span>
+        <span style="flex:none;">IQ&#256;MAH / JAM&#256;'AH</span>
+      </div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+        <sc-if value="{{ r.sep }}" hint-placeholder-val="{{ false }}">
+          <div style="height:2px;background:var(--gold,#d8b25a);margin:8px 4px 4px;flex:none;"></div>
+        </sc-if>
+        <div style="display:flex;align-items:center;gap:10px;padding:2px 13px;border-radius:11px;background:{{ r.bg }};border:{{ r.border }};">
+          <div style="display:flex;align-items:baseline;gap:7px;flex:none;">
+            <span style="font-size:23px;font-weight:700;color:{{ r.labelColor }};letter-spacing:.2px;white-space:nowrap;">{{ r.label }}</span>
+            <span style="font-family:'Noto Naskh Arabic',serif;font-size:19px;color:var(--muted,#8fa7bb);white-space:nowrap;">{{ r.arabic }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-left:auto;min-width:0;">
+            <div style="display:flex;flex-direction:column;text-align:right;line-height:1.26;min-width:0;">
+              <span style="font-size:15px;color:var(--muted2,#9fb3c4);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.sub1 }}</span>
+              <sc-if value="{{ r.hasSub2 }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:15px;color:var(--muted3,#7c93a6);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.sub2 }}</span>
+              </sc-if>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:3px;flex:none;min-width:94px;color:{{ r.timeColor }};">
+              <span style="font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.02;letter-spacing:-.7px;">{{ r.timeNum }}</span>
+              <span style="font-size:13px;font-weight:700;letter-spacing:.3px;opacity:.72;">{{ r.timeAp }}</span>
+            </div>
+            <sc-if value="{{ r.hasChg }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:2px;padding:2px 6px;border-radius:6px;background:{{ chgChipBg }};border:{{ chgChipLn }};flex:none;">
+                <span style="font-size:15px;color:{{ chgNoteColor }};">&#8594;</span>
+                <span style="font-size:19px;font-weight:800;color:{{ chgNoteColor }};font-variant-numeric:tabular-nums;">{{ r.chgTo }}</span>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ hasNotice }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;margin:0 0 2px;padding:5px 12px 6px;border-radius:10px;background:{{ chgNoteBg }};border:{{ chgNoteLn }};color:{{ chgNoteColor }};display:flex;flex-direction:column;align-items:center;gap:0;text-align:center;">
+        <sc-if value="{{ hasDst }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:18px;font-weight:800;letter-spacing:.2px;line-height:1.2;">{{ dstLine }}</div>
+        </sc-if>
+        <sc-if value="{{ hasDst }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:14px;font-weight:700;line-height:1.3;">{{ dstSub }}</div>
+        </sc-if>
+        <sc-if value="{{ hasTimeChange }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:{{ chgNoteSize }};font-weight:700;line-height:1.3;text-wrap:pretty;">New iq&#257;mah times start {{ timeChangeDate }} &#8594;</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div style="background:var(--surf2,rgba(255,255,255,.05));border:1px solid var(--line1,rgba(255,255,255,.08));border-radius:12px;padding:11px 14px;flex:none;display:flex;align-items:center;gap:14px;">
+      <div style="background:#fff;border-radius:8px;padding:4px;flex:none;"><img src="assets/qr-donate.png" alt="Donate now" style="width:70px;height:70px;display:block;"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:27px;font-weight:700;line-height:1;color:var(--ink,#e9f1f7);">Donate now</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--gold,#d8b25a);line-height:1.35;">islamicabc.com/donate</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink3,#cfdae4);line-height:1.35;">or Zelle admin@islamicabc.com</div>
+      </div>
+    </div>
+    <div style="background:var(--surf2,rgba(255,255,255,.05));border:1px solid var(--line1,rgba(255,255,255,.08));border-radius:12px;padding:11px 14px;flex:none;display:flex;align-items:center;gap:14px;">
+      <div style="background:#fff;border-radius:8px;padding:4px;flex:none;"><img src="assets/qr-pledge.png" alt="Make a pledge" style="width:70px;height:70px;display:block;"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:27px;font-weight:700;line-height:1;color:var(--ink,#e9f1f7);">Make a pledge</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--gold,#d8b25a);line-height:1.35;">islamicabc.com/pledge</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink3,#cfdae4);line-height:1.35;">Already pledged? Please fulfill it.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main style="flex:1;min-width:0;height:100%;padding:10px;display:flex;flex-direction:column;">
+
+    <section style="flex:1;min-height:0;background:var(--surf1,rgba(255,255,255,.04));border:1px solid var(--line1,rgba(255,255,255,.08));border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column;">
+      <div style="flex:1;min-height:0;position:relative;overflow:hidden;">{{ stageEl }}
+        
+      </div>
+      <div style="position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:9px;">
+        <sc-for list="{{ dots }}" as="d" hint-placeholder-count="6">
+          <div onClick="{{ d.onClick }}" style="width:{{ d.w }};height:8px;border-radius:4px;background:{{ d.color }};transition:all .3s;cursor:pointer;"></div>
+        </sc-for>
+      </div>
+    </section>
+
+
+  </main>
+
+ </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Auto (day / night)&quot;,&quot;options&quot;:[&quot;Auto (day / night)&quot;,&quot;Always day&quot;,&quot;Always night&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Display&quot;,&quot;label&quot;:&quot;Theme&quot;},&quot;rotationSeconds&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:60,&quot;unit&quot;:&quot;s&quot;,&quot;section&quot;:&quot;Display&quot;,&quot;label&quot;:&quot;Seconds per slide (0 = use content.js)&quot;},&quot;clockFormat&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;12-hour&quot;,&quot;options&quot;:[&quot;12-hour&quot;,&quot;24-hour&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;webZoom1&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0.6,&quot;max&quot;:2.2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;section&quot;:&quot;Live websites&quot;,&quot;label&quot;:&quot;Zoom — 1st live site (Admissions)&quot;},&quot;webZoom2&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0.6,&quot;max&quot;:2.2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;section&quot;:&quot;Live websites&quot;,&quot;label&quot;:&quot;Zoom — 2nd live site (Classroom seats)&quot;}}">
+class Component extends DCLogic {
+  state = { cfg: null, prayer: null, now: new Date(), index: 0, reloadToken: 1, webToken: 1, reminderIdx: 0, reflectFade: 1, weather: null, scale: 1,
+    // null = follow the Theme prop / sunrise-sunset. true/false = the lobby staff
+    // pressed N to override the CURRENT period only. overridePhase remembers what
+    // the schedule wanted at that moment, so the override retires by itself at the
+    // next sunrise / Maghrib instead of latching forever.
+    nightOverride: null, overridePhase: null };
+
+  computeScale = () => this.setState({ scale: Math.min(window.innerWidth / 1920, window.innerHeight / 1080) });
+
+  P = { ink:"var(--ink,#e9f1f7)", muted:"var(--muted,#8fa7bb)", blue:"var(--blue,#52a6dc)", blueLt:"var(--blueLt,#7cc6ee)", gold:"var(--gold,#d8b25a)", line:"var(--line2,rgba(255,255,255,.09))", surf:"var(--surf2,rgba(255,255,255,.05))" };
+  AR = { Fajr:"فَجْر", "Shurūq":"شُرُوق", "Ishrāq":"إِشْرَاق", Dhuhr:"ظُهْر", "Jumu'ah":"جُمُعَة", Asr:"عَصْر", Maghrib:"مَغْرِب", "Ishā'":"عِشَاء" };
+  // Hijri month names, so an anchor typed into the Google Sheet (which has no
+  // Arabic column to fill in) still renders an Arabic month rather than falling
+  // back to the Latin spelling inside the RTL line.
+  AR_MONTHS = {
+    muharram: "محرم",
+    safar: "صفر",
+    rabialawwal: "ربيع الأول",
+    rabialthani: "ربيع الثاني",
+    jumadaalawwal: "جمادى الأولى",
+    jumadaalthani: "جمادى الآخرة",
+    rajab: "رجب",
+    shaban: "شعبان",
+    ramadan: "رمضان",
+    shawwal: "شوال",
+    dhualqadah: "ذو القعدة",
+    dhualhijjah: "ذو الحجة",
+    // Common alternate spellings, so a HIJRI row typed into the sheet always
+    // resolves. Aliases are cheaper and more predictable than more regex.
+    rabialakhir: "ربيع الثاني",
+    // "Rabi at-Thani" / "Rabi ath-Thani" / "Rabi us-Sani" — the spellings the
+    // Hilal Committee actually types into the sheet.
+    rabiatthani: "ربيع الثاني",
+    rabiathani: "ربيع الثاني",
+    rabiaththani: "ربيع الثاني",
+    rabiussani: "ربيع الثاني",
+    rabiassani: "ربيع الثاني",
+    rabialsani: "ربيع الثاني",
+    rabiuthani: "ربيع الثاني",
+    rabialakhira: "ربيع الثاني",
+    rabialakhirah: "ربيع الثاني",
+    jumadaalula: "جمادى الأولى",
+    jumadaalakhir: "جمادى الآخرة",
+    jumadaalakhira: "جمادى الآخرة",
+    jumadaalakhirah: "جمادى الآخرة",
+    jumadaalukhra: "جمادى الآخرة",
+    jumadaalukhrah: "جمادى الآخرة",
+    jumadaalukhraa: "جمادى الآخرة",
+    jumadaalthaniyah: "جمادى الآخرة",
+    jumadaalthaniya: "جمادى الآخرة",
+    jumadaaluula: "جمادى الأولى",
+    jumadaaloola: "جمادى الأولى",
+    ramadhan: "رمضان",
+    ramzan: "رمضان",
+    shabaan: "شعبان",
+    dhulqadah: "ذو القعدة",
+    dhulqada: "ذو القعدة",
+    zulqadah: "ذو القعدة",
+    dhulhijjah: "ذو الحجة",
+    dhulhijja: "ذو الحجة",
+    zulhijjah: "ذو الحجة",
+    zulhijja: "ذو الحجة",
+  };
+
+  // "Rabiʻ al-Awwal", "Rabi' al-Awwal", "Rabi ul Awwal" and "rabialawwal" all
+  // reduce to the same key, so any reasonable spelling in the sheet resolves.
+  // Arabic-Indic numerals, so the RTL date line reads as one Arabic phrase
+  // rather than Arabic words wrapped around Latin digits.
+  arDigits(v) { return String(v).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[+d]); }
+
+  arabicMonth(name) {
+    const k = String(name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[\u2018\u2019'`ʻʼ]/g, "")
+      .replace(/\b(al|ul|el)\b/g, "al")
+      .replace(/[^a-z]/g, "");
+    if (this.AR_MONTHS[k]) return this.AR_MONTHS[k];
+    // Fused article ("dhulhijjah", "zulqadah") → the spaced form, then the
+    // missing-article forms ("rabiawwal" → "rabialawwal").
+    let alt = k.replace(/^zu/, "dhu").replace(/^dhul(?=[a-z])/, "dhual");
+    if (this.AR_MONTHS[alt]) return this.AR_MONTHS[alt];
+    alt = alt.replace(/^rabi(?!al)/, "rabial").replace(/^jumada(?!al)/, "jumadaal").replace(/^dhu(?!al)/, "dhual");
+    return this.AR_MONTHS[alt] || "";
+  }
+  STAGE_W = 1412; STAGE_H = 870;
+  // Live sites sit 30px clear of the slide-dot bar; other slide types already
+  // centre well inside it.
+  WEB_H = 840;
+  reflectBox = React.createRef();
+  reflectFit = React.createRef();
+  rootRef = React.createRef();
+
+  // Scales the reflection text so it FILLS its box without ever overflowing.
+  // Binary-searches the base font size; every size inside the box is in em, so
+  // one number drives the Arabic, the translation and the source line together.
+  fitReflection(force) {
+    const el = this.reflectFit.current;
+    if (!el || !el.clientHeight) return;
+    if (force) this._fitKey = null;
+    // Only re-measure when the content or the box size actually changed — this
+    // runs on a screen that stays on for months, and the clock re-renders once
+    // a second. Without this guard that is 14 forced reflows every second.
+    // Cache on the CONTENT as well as the box: the first fit runs before the
+    // config has loaded, when the box is empty and everything "fits" at the
+    // ceiling size. Keying on text length lets the real content re-fit.
+    const key = this.state.reminderIdx + "|" + el.clientWidth + "x" + el.clientHeight + "|" + el.textContent.length;
+    if (!force && key === this._fitKey) return;
+    this._fitKey = key;
+    const all = [...el.querySelectorAll("[data-rline]")];
+    const body = all.filter(l => /^(ar|en)$/.test(l.dataset.rline));
+    const setWrap = (w) => body.forEach(l => { l.style.whiteSpace = w; });
+    const okWidth = (els) => els.every(l => l.scrollWidth <= l.clientWidth + 1);
+    const widthOk = () => okWidth(all);
+    const search = (checkWidth) => {
+      const fits = () => el.scrollHeight <= el.clientHeight
+        && (checkWidth ? widthOk() : okWidth(all.filter(l => !body.includes(l))));
+      let lo = 10, hi = 44, best = 10;
+      for (let i = 0; i < 14; i++) {
+        const mid = (lo + hi) / 2;
+        el.style.fontSize = mid + "px";
+        if (fits()) { best = mid; lo = mid; } else hi = mid;
+      }
+      // Round DOWN — rounding to nearest can land above the size just verified.
+      best = Math.floor(best * 100) / 100;
+      el.style.fontSize = best + "px";
+      let guard = 0;
+      while (!fits() && best > 10 && guard++ < 12) { best = Math.round((best - 0.25) * 100) / 100; el.style.fontSize = best + "px"; }
+      return best;
+    };
+    // Short reflections read better as one Arabic line + one English line. Try
+    // that first; only fall back to wrapping if holding one line would shrink
+    // the text below what wrapping achieves.
+    setWrap("nowrap");
+    const oneLine = search(true);
+    setWrap("normal");
+    const wrapped = search(false);
+    if (oneLine >= wrapped * 0.82) { setWrap("nowrap"); search(true); }
+  }
+  // Local asset paths are rewritten to data: URIs by the single-file export, but
+  // only inside real <img src> attributes in the template. Slides built with
+  // React.createElement therefore look their images up through the hidden
+  // preload block above, which the exporter DOES rewrite. Remote URLs (from the
+  // Google Sheet) are passed straight through.
+  asset(src) {
+    if (!src || /^(https?:|data:|blob:)/i.test(src)) return src;
+    const el = document.querySelector('[data-asset="' + src.replace(/^\.\//, "") + '"]');
+    return el ? el.src : src;
+  }
+
+  componentDidUpdate() { this.fitReflection(); this.applyTheme(); }
+
+  // The four data files are plain scripts loaded in <helmet>, publishing their
+  // contents on window. That is what lets the single-file export work offline:
+  // dynamic import() of a relative path cannot survive bundling, and is blocked
+  // outright when the page is opened from a USB stick over file://.
+  async waitForData() {
+    for (let i = 0; i < 400; i++) {
+      if (window.IABC_CONTENT && window.IABC_PRAYER && window.IABC_ADHAN && window.IABC_SHEET) return true;
+      await new Promise(r => setTimeout(r, 25));
+    }
+    return false;
+  }
+
+  async componentDidMount() {
+    try {
+      await this.waitForData();
+      const c = window.IABC_CONTENT, p = window.IABC_PRAYER, ad = window.IABC_ADHAN, sh = window.IABC_SHEET;
+      if (!c || !p || !ad || !sh) throw new Error("data scripts did not load");
+      this._sheet = sh;
+      // Paint from the last saved copy of the sheet right away, so a slow or
+      // dead connection never shows stale content.js numbers even briefly.
+      let start = c.config;
+      const cached = sh.readCache && sh.readCache();
+      if (cached) {
+        const patch = sh.configFromCSV(cached.csv, c.config);
+        if (patch) start = { ...c.config, ...patch, sheetSource: "cache", sheetAt: cached.at };
+      }
+      this.setState({ cfg: this.fundOnly(start), prayer: p, adh: ad });
+      this.startReminders();
+      this.refreshSheet(c.config);
+      const mins = c.config.sheetRefreshMinutes || 10;
+      this._sheetTimer = setInterval(() => this.refreshSheet(c.config), mins * 60000);
+      this.startRotation(c.config);
+      this.fetchWeather(c.config.weather);
+      this._wx = setInterval(() => this.fetchWeather(c.config.weather), 900000);
+      // Refresh the pre-loaded live sites on a slow timer instead of on every rotation.
+      this._web = setInterval(() => this.setState(s => ({ webToken: s.webToken + 1 })), 900000);
+      // Pie ↔ student leaderboard, 12 s each.
+      this.startLbTimer();
+      this._onLb = () => this.forceUpdate();
+      window.addEventListener("iabc-leaderboard", this._onLb);
+    } catch (e) { console.error("config load failed", e); }
+    try {
+      const v = localStorage.getItem("iabc.night");
+      if (v === "true" || v === "false") this.setState({ nightOverride: v === "true", overridePhase: !(v === "true") });
+      else if (v && v[0] === "{") { const o = JSON.parse(v); if (typeof o.n === "boolean") this.setState({ nightOverride: o.n, overridePhase: o.p }); }
+    } catch (err) {}
+    this._clock = setInterval(() => { this.setState({ now: new Date() }); this.expireOverride(); }, 1000);
+    this.startReminders();
+    this.applyTheme();
+    this.computeScale();
+    window.addEventListener("resize", this.computeScale);
+    window.addEventListener("keydown", this.onKey);
+    this.fitReflection(true);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.fitReflection(true));
+    this._onResizeFit = () => this.fitReflection(true);
+    window.addEventListener("resize", this._onResizeFit);
+  }
+  componentWillUnmount() { window.removeEventListener("iabc-leaderboard", this._onLb); window.removeEventListener("resize", this._onResizeFit); clearTimeout(this._rot); [this._clock, this._rem, this._rot, this._wx, this._web, this._sheetTimer, this._lb].forEach(t => t && clearInterval(t)); window.removeEventListener("resize", this.computeScale); window.removeEventListener("keydown", this.onKey); }
+
+  // ---- manual slide navigation (arrow keys + click the dots) ----
+  // Left/right arrows move slides; up/down step through the reflections so a
+  // teacher can hold one āyah on screen while explaining it.
+  // ---- pin placement (press P) -------------------------------------------
+  // Jumps to the scope slide, freezes rotation, and lets pins be dragged. The
+  // moved coordinates are saved to localStorage so the display keeps them, and
+  // printed as a content.js-ready block for pasting back into the file.
+  togglePinEdit() {
+    const slides = (this.state.cfg && this.state.cfg.slides) || [];
+    const at = slides.findIndex(s => s.type === "scope");
+    if (at < 0) return;
+    this.setState(s => ({ pinEdit: !s.pinEdit, index: s.pinEdit ? s.index : at }));
+  }
+
+  pinOverride() {
+    if (this._pinOv) return this._pinOv;
+    try { this._pinOv = JSON.parse(localStorage.getItem("iabc.scopePins") || "null") || null; }
+    catch (_) { this._pinOv = null; }
+    return this._pinOv;
+  }
+
+  savePins(rooms) {
+    this._pinOv = rooms.map(r => ({ label: r.label, x: r.x, y: r.y }));
+    try { localStorage.setItem("iabc.scopePins", JSON.stringify(this._pinOv)); } catch (_) {}
+    this.forceUpdate();
+  }
+
+  startPinDrag(e, rooms, i, boxEl) {
+    e.preventDefault();
+    const box = boxEl.getBoundingClientRect();
+    const move = (ev) => {
+      const next = rooms.map(r => ({ ...r }));
+      next[i].x = Math.round(Math.min(100, Math.max(0, ((ev.clientX - box.left) / box.width) * 100)) * 10) / 10;
+      next[i].y = Math.round(Math.min(100, Math.max(0, ((ev.clientY - box.top) / box.height) * 100)) * 10) / 10;
+      this.savePins(next);
+    };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  // Pie ↔ leaderboard every 12 s; a click or ←/→ flips it and restarts the 12 s.
+  startLbTimer() { clearInterval(this._lb); this._lb = setInterval(() => this.setState(s => ({ lbOn: !s.lbOn })), 12000); }
+  flipLb = () => { this.setState(s => ({ lbOn: !s.lbOn })); this.startLbTimer(); };
+
+  onKey = (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") this.flipLb();
+    else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); this.goReminder(e.key === "ArrowDown" ? 1 : -1); }
+    else if (e.key === "p" || e.key === "P") this.togglePinEdit();
+    else if (e.key === "N" && e.shiftKey) this.resetTheme();
+    else if (e.key === "n" || e.key === "N") this.toggleNight();
+  };
+
+  // N is a plain switch: night ↔ day. The screen changing IS the feedback, so
+  // there is no on-screen message. The override lasts until the next scheduled
+  // sunrise / Maghrib flip, then the display goes back to switching by itself.
+  toggleNight = () => {
+    const next = !this.isNight();
+    const phase = this.autoNight();
+    try { localStorage.setItem("iabc.night", JSON.stringify({ n: next, p: phase })); } catch (err) {}
+    this.setState({ nightOverride: next, overridePhase: phase });
+  };
+
+  // Retires a manual override once the schedule itself has moved on.
+  expireOverride() {
+    if (this.state.nightOverride === null) return;
+    if (this.autoNight() === this.state.overridePhase) return;
+    try { localStorage.setItem("iabc.night", "auto"); } catch (err) {}
+    this.setState({ nightOverride: null, overridePhase: null });
+  }
+
+  // Shift+N hands the screen back to the automatic sunrise → Maghrib schedule.
+  resetTheme = () => {
+    try { localStorage.setItem("iabc.night", "auto"); } catch (err) {}
+    this.setState({ nightOverride: null, overridePhase: null });
+  };
+
+  // What the SCHEDULE wants right now, ignoring any manual override.
+  autoNight() {
+    const pick = this.props.theme || "Auto (day / night)";
+    if (/always day/i.test(pick)) return false;
+    if (/always night/i.test(pick)) return true;
+    const now = this.state.now, mins = now.getHours() * 60 + now.getMinutes();
+    return !(this._sunMin > 0 && this._magMin > 0 ? mins >= this._sunMin && mins < this._magMin
+                                                  : mins >= 6 * 60 && mins < 20 * 60);
+  }
+
+  // Whether the design is currently dark: a live override wins, else the schedule.
+  isNight() {
+    const ov = this.state.nightOverride;
+    return ov !== null ? ov : this.autoNight();
+  }
+  goReminder = (dir) => {
+    const n = (this.state.cfg && this.state.cfg.reminders.length) || 1;
+    this.startReminders();
+    this.setState({ reflectFade: 0 });
+    setTimeout(() => this.setState(s => ({ reminderIdx: (s.reminderIdx + dir + n) % n, reflectFade: 1 })), 260);
+  };
+
+  // One reflection per visit: nothing cycles while the slide is on screen. The
+  // index advances as the reflection slide is LEFT, so the next visit is new.
+  startReminders() {
+    clearInterval(this._rem);
+    const secs = (this.state.cfg && this.state.cfg.reflectionSeconds) || 30;
+    this._rem = setInterval(() => {
+      const n = (this.state.cfg && this.state.cfg.reminders.length) || 1;
+      this.setState({ reflectFade: 0 });
+      setTimeout(() => this.setState(s => ({ reminderIdx: (s.reminderIdx + 1) % n, reflectFade: 1 })), 500);
+    }, secs * 1000);
+  }
+  // The TV currently shows ONLY the fundraising slide; reflections live in the
+  // bottom strip on their own timer.
+  fundOnly(c) {
+    if (!c) return c;
+    const ms = (c.slides || []).find(x => x.type === "milestone") || { type: "milestone", seconds: 40 };
+    return { ...c, slides: [ms] };
+  }
+
+  // reminderIdx bumped iff the slide we are leaving is the reflection slide.
+  advanceReminder(s, cfg) {
+    const slides = (cfg && cfg.slides) || [];
+    const leaving = slides[s.index % (slides.length || 1)];
+    return s.reminderIdx;
+  }
+
+  // ---- day / night theme -------------------------------------------------
+  // Only the CSS custom properties change; every style in the design reads them
+  // with the night value as its fallback, so the dark theme needs no work at all.
+  // The DAY / NIGHT token maps live in fund-graphics.js, shared with the
+  // shareable graphics so an exported image uses the lobby screen's palette.
+  get DAY() { return window.IABC_FUND.DAY; }
+  get NIGHT() { return window.IABC_FUND.NIGHT; }
+
+  applyTheme() {
+    // Tokens go on document.body: it is an ancestor of the whole design, but it
+    // sits OUTSIDE the React render tree (which rewrites the root's style
+    // attribute every clock tick) and outside documentElement (host-managed).
+    const el = document.body;
+    if (!el) return;
+    const day = !this.isNight();
+    // Verify against the real DOM rather than a boolean latch, so any outside
+    // rewrite is repaired on the next render instead of being latched off.
+    const map = day ? this.DAY : this.NIGHT;
+    // The sentinel embeds the palette's own values, so editing a colour
+    // invalidates it — a plain "day"/"night" flag left stale tokens in place.
+    const want = (day ? "day" : "night") + "-" + map["--bg1"] + map["--ink"] + map["--gold"];
+    if (el.style.getPropertyValue("--om-theme") === want) return;
+    for (const k of Object.keys(map)) el.style.setProperty(k, map[k]);
+    el.style.setProperty("--om-theme", want);
+  }
+  go = (dir) => {
+    const n = this.state.cfg ? (this.state.cfg.slides.length || 1) : 1;
+    this.setState(s => ({ index: (s.index + dir + n) % n, reloadToken: s.reloadToken + 1, reminderIdx: this.advanceReminder(s, this.state.cfg) }));
+    if (this.state.cfg) this.startRotation(this.state.cfg);
+  };
+  goTo = (i) => {
+    this.setState(s => ({ index: i, reloadToken: s.reloadToken + 1 }));
+    if (this.state.cfg) this.startRotation(this.state.cfg);
+  };
+
+  // Each slide can set its own `seconds`; anything without one uses the global
+  // rotationSeconds. A timeout (not an interval) is used so the next slide's own
+  // duration is read fresh each time.
+  startRotation(cfg) {
+    const fallback = (this.props.rotationSeconds > 0 ? this.props.rotationSeconds : cfg.rotationSeconds) || 10;
+    clearTimeout(this._rot); clearInterval(this._rot);
+    const tick = () => {
+      const slides = (this.state.cfg && this.state.cfg.slides) || [];
+      const cur = slides[this.state.index % (slides.length || 1)];
+      const secs = (cur && cur.seconds > 0) ? cur.seconds : fallback;
+      this._rot = setTimeout(() => {
+        // Pin-edit mode holds the scope slide on screen while someone drags pins.
+        if (this.state.pinEdit) { tick(); return; }
+        this.setState(s => ({ index: (s.index + 1) % (slides.length || 1), reloadToken: s.reloadToken + 1, reminderIdx: this.advanceReminder(s, cfg) }), tick);
+      }, secs * 1000);
+    };
+    tick();
+  }
+
+  async fetchWeather(w) {
+    if (!w) return;
+    try {
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=2&timezone=auto&temperature_unit=fahrenheit`);
+      const j = await r.json();
+      const d = j.daily || {};
+      const pick = (arr, i) => Array.isArray(arr) && arr[i] != null ? Math.round(arr[i]) : null;
+      this.setState({ weather: { temp: Math.round(j.current.temperature_2m), code: j.current.weather_code, label: w.label,
+        hi: pick(d.temperature_2m_max, 0), lo: pick(d.temperature_2m_min, 0),
+        tHi: pick(d.temperature_2m_max, 1), tLo: pick(d.temperature_2m_min, 1),
+        tCode: Array.isArray(d.weather_code) ? d.weather_code[1] : null } });
+    } catch (e) { /* keep last / hidden */ }
+  }
+
+  // ---- time helpers ----
+  toMin(str, pm) { const [h, m] = str.split(":").map(Number); let hh = h % 12; if (pm) hh += 12; return hh * 60 + m; }
+  fmt(min) { let hh = Math.floor(min / 60) % 24, mm = min % 60; const ap = hh >= 12 ? "PM" : "AM"; let h = hh % 12; if (h === 0) h = 12; return `${h}:${String(mm).padStart(2, "0")} ${ap}`; }
+
+  fmtLc(min) { return this.fmt(min); }
+  splitAp(t) { const s = String(t); return { num: s.replace(/\s*(AM|PM)\s*$/i, ""), ap: ((s.match(/(AM|PM)\s*$/i) || ["", ""])[1] || "").toUpperCase() }; }
+
+  raisedTotal(f) {
+    const fromCats = Array.isArray(f.categories) ? f.categories.reduce((s, c) => s + (Number(c.amount) || 0), 0) : 0;
+    const fromGifts = Array.isArray(f.donations) ? f.donations.reduce((s, d) => s + (Number(d.amount) || 0), 0) : 0;
+    return (f.startingAmount || 0) + fromCats + fromGifts + (f.categories ? 0 : (f.raised || 0));
+  }
+
+  // Pulls the public Google Sheet and overlays it on content.js. Any failure
+  // leaves the current config untouched, so the screen never goes blank.
+  async refreshSheet(baseCfg) {
+    if (!this._sheet || !baseCfg.sheetId) return;
+    const merged = await this._sheet.loadSheetConfig(baseCfg);
+    this.setState({ cfg: this.fundOnly(merged) });
+  }
+
+  toMin24(s) { const [h, m] = String(s).split(":").map(Number); return h * 60 + m; }
+
+  // True sunrise for the exact date at the masjid's coordinates (NOAA/SunCalc
+  // solar equations) — the weekly printed table rounds, so this is more precise.
+  solarMinutes(date, lat, lon, rise) {
+    const rad = Math.PI / 180, J1970 = 2440588, J2000 = 2451545, dayMs = 86400000;
+    const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+    const d = noon.valueOf() / dayMs - 0.5 + J1970 - J2000;
+    const lw = -lon * rad, phi = lat * rad;
+    const M = rad * (357.5291 + 0.98560028 * d);
+    const L = M + rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) + rad * 102.9372 + Math.PI;
+    const dec = Math.asin(Math.sin(rad * 23.4397) * Math.sin(L));
+    const h0 = -0.833 * rad;
+    const w = Math.acos((Math.sin(h0) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec)));
+    if (isNaN(w)) return null;
+    const n = Math.round(d - 0.0009 - lw / (2 * Math.PI));
+    const transit = J2000 + (0.0009 + lw / (2 * Math.PI) + n) + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+    const setJ = J2000 + (0.0009 + (w + lw) / (2 * Math.PI) + n) + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+    const j = rise === "transit" ? transit : (rise ? transit - (setJ - transit) : setJ);
+    const t = new Date((j + 0.5 - J1970) * dayMs);
+    return t.getHours() * 60 + t.getMinutes() + (t.getSeconds() >= 30 ? 1 : 0);
+  }
+
+  // Both live in fund-graphics.js so the lobby slide and the shareable
+  // graphics can never drift apart.
+  fundSlices(f) { return window.IABC_FUND.slices(f); }
+  donutChart(sl, total, size, center) { return window.IABC_FUND.donut(React.createElement, sl, total, size, center); }
+
+  // Hijri date anchored to confirmed moon sightings (see content.js).
+  hijriFromAnchors(d, cfg) {
+    const list = (cfg.hijriMonthStarts || []).map(a => ({ ...a, t: new Date(a.greg + "T00:00:00") }))
+      .filter(a => !isNaN(a.t.getTime())).sort((x, y) => x.t - y.t);
+    if (!list.length) return null;
+    // The Islamic day begins at sunset, so after the Maghrib adhān the date
+    // already belongs to the NEXT Hijri day.
+    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    try {
+      const mag = this.maghribAdhaanMin(d);
+      if (mag > 0 && (d.getHours() * 60 + d.getMinutes()) >= mag) today.setDate(today.getDate() + 1);
+    } catch (e) {}
+    let cur = null;
+    for (const a of list) if (a.t.getTime() <= today.getTime()) cur = a;
+    if (!cur) return null;
+    const day = Math.round((today - cur.t) / 86400000) + 1;
+    if (day < 1 || day > 30) return null;   // anchor is stale — fall back to the arithmetic calendar
+    // Day 29 onward: the next month depends on tonight's sighting, so say so.
+    // The Arabic line is built from the SAME anchor as the English one — reading
+    // it from Intl's arithmetic calendar instead put the two a day apart.
+    const ar = `${this.arDigits(day)} ${cur.labelAr || this.arabicMonth(cur.label) || cur.label} ${this.arDigits(cur.year)} هـ`;
+    // Only day 29 is uncertain. A month never runs past 30, so on day 30 the
+    // next month starts tonight for certain — no "pending" hedge.
+    const en = String(cur.label || "").replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()).replace(/\bAl-/g, "al-");
+    return { text: `${day} ${en} ${cur.year} AH`, textAr: ar, pending: day === 29, lastDay: day === 30 };
+  }
+
+  // Iqāmah times that take effect NEXT Sunday, compared against today's, so the
+  // sidebar can warn the congregation before a prayer time actually moves.
+  upcomingChanges(now) {
+    const P = this.state.prayer;
+    if (!P) return null;
+    const nextSun = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    nextSun.setDate(nextSun.getDate() + ((7 - nextSun.getDay()) % 7 || 7));
+    const a = this.iqamahFor(now), b = this.iqamahFor(nextSun);
+    if (!a || !b || a === b) return null;
+    const keys = [["fajr", "Fajr", false], ["dhuhr", "Dhuhr", true], ["asr", "Asr", true], ["ishaa", "Ish\u0101'", true]];
+    const list = [];
+    for (const [k, label, pm] of keys) {
+      if (!a[k] || !b[k] || a[k] === b[k]) continue;
+      list.push({ label, from: this.fmt(this.toMin(a[k], pm)), to: this.fmt(this.toMin(b[k], pm)) });
+    }
+    if (!list.length) return null;
+    const days = Math.round((nextSun - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+    const md = nextSun.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const date = days === 1 ? "TOMORROW, " + md
+      : days === 7 ? "next Sunday, " + md
+      : "this Sunday, " + md;
+    // DST flips in the early hours of a Sunday, so it shows up as a UTC-offset
+    // difference between today and the Sunday the new times start.
+    return { date, list, imminent: days === 1 };
+  }
+
+  // Any daylight-saving change in the next 7 days, independent of iqāmah changes.
+  dstAhead(now) {
+    const noon = (k) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + k, 12);
+    for (let k = 1; k <= 7; k++) {
+      const off = noon(k).getTimezoneOffset() - noon(k - 1).getTimezoneOffset();
+      if (!off) continue;
+      const back = off > 0, d = noon(k);
+      const when = k === 1 ? "tonight" : (k <= 7 - now.getDay() ? "this " : "") + "Sat night";
+      const md = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      return { title: (back ? "Daylight saving ends" : "Daylight saving begins") + (k === 1 ? " tonight" : ""),
+               sub: "Clocks go " + (back ? "BACK" : "FORWARD") + " 1 hour · 2 AM " + md };
+    }
+    return null;
+  }
+
+  iqamahFor(d) {
+    const T = this.state.prayer.IQAMAH, mo = d.getMonth() + 1, day = d.getDate();
+    let cur = T[T.length - 1];
+    for (const e of T) { if (e.m < mo || (e.m === mo && e.d <= day)) cur = e; else break; }
+    return cur;
+  }
+  maghribAdhaanMin(d) {
+    const arr = this.state.prayer.MAGHRIB[d.getMonth() + 1] || [];
+    const s = arr[d.getDate() - 1] || arr[arr.length - 1];
+    return this.toMin(s, true);
+  }
+
+  buildDay(d) {
+    const iq = this.iqamahFor(d), P = this.state.prayer, isFri = d.getDay() === 5;
+    const mAdh = this.maghribAdhaanMin(d), mIq = mAdh + P.MAGHRIB_IQAMAH_OFFSET;
+    const fajr = this.toMin(iq.fajr, false), sun = this.toMin(iq.sunrise, false);
+    const dhuhr = this.toMin(iq.dhuhr, true), asr = this.toMin(iq.asr, true), ishaa = this.toMin(iq.ishaa, true);
+    const wx = (this.state.cfg && this.state.cfg.weather) || { lat: 40.0715, lon: -74.8646 };
+    const trueSun = this.solarMinutes(d, wx.lat, wx.lon, true);
+    const solarNoon = this.solarMinutes(d, wx.lat, wx.lon, "transit");
+    const dhuhrStart = solarNoon != null ? solarNoon + 2 : null;   // true Dhuhr = just past solar zenith
+
+    // Adhān (prayer-beginning) times for this exact date, from adhan-times.js.
+    const A = this.state.adh ? this.state.adh.adhaanFor(d) : null;
+    const adh = A ? {
+      fajr: this.toMin24(A.fajr), sunrise: this.toMin24(A.sunrise), dhuhr: this.toMin24(A.dhuhr),
+      asr: this.toMin24(A.asr), maghrib: this.toMin24(A.maghrib), isha: this.toMin24(A.isha),
+    } : null;
+    const jum = this.toMin(P.JUMUAH.khutbah, true), jumAdh = this.toMin(P.JUMUAH.adhaan1, true);
+    const mAdhFinal = adh ? adh.maghrib : mAdh;
+    return { fajr, sun: adh ? adh.sunrise : (trueSun != null ? trueSun : sun), dhuhr, dhuhrStart, asr, ishaa,
+             mAdh: mAdhFinal, mIq: mAdhFinal + P.MAGHRIB_IQAMAH_OFFSET, isFri, jum, jumAdh, adh };
+  }
+
+  renderVals() {
+    const P = this.P, S = this.state, now = S.now;
+    const fmt12 = (this.props.clockFormat || "12-hour") === "12-hour";
+    let hh = now.getHours(); const ap = hh >= 12 ? "PM" : "AM";
+    let hDisp = fmt12 ? (hh % 12 || 12) : hh;
+    const clockHM = `${hDisp}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const clockS = ":" + String(now.getSeconds()).padStart(2, "0");
+    const dateGreg = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    let dateHijri = "", dateHijriAr = "";
+    try { dateHijri = new Intl.DateTimeFormat("en-u-ca-islamic", { day: "numeric", month: "long", year: "numeric" }).format(now).replace(/\s?AH$/, "") + " AH"; } catch (e) {}
+    try { dateHijriAr = new Intl.DateTimeFormat("ar-u-ca-islamic", { day: "numeric", month: "long", year: "numeric" }).format(now); } catch (e) {}
+
+    let weatherText = "";
+    if (S.weather) { const wm = this.weatherLabel(S.weather.code); weatherText = `${S.weather.temp}° ${wm}`; }
+    const wxParts = S.weather
+      ? { hasWeather: true, weatherTemp: S.weather.temp + "°", weatherDesc: this.weatherLabel(S.weather.code),
+          weatherIcon: this.weatherIcon(S.weather.code), weatherPlace: S.weather.label || "",
+          hasWxToday: S.weather.hi != null,
+          wxToday: S.weather.hi != null ? `H ${S.weather.hi}° · L ${S.weather.lo}°` : "",
+          hasWxTmrw: S.weather.tHi != null,
+          wxTmrwIcon: S.weather.tCode != null ? this.weatherIcon(S.weather.tCode) : "",
+          wxTmrw: S.weather.tHi != null ? `Tmrw ${S.weather.tHi}°/${S.weather.tLo}°` : "" }
+      : { hasWeather: false, weatherTemp: "", weatherDesc: "", weatherIcon: "", weatherPlace: "",
+          hasWxToday: false, wxToday: "", hasWxTmrw: false, wxTmrwIcon: "", wxTmrw: "" };
+
+    const out = { fitScale: "scale(" + S.scale + ")", clockHM, clockS: fmt12 ? clockS : clockS, clockAP: fmt12 ? ap : "", dateGreg, dateHijri, dateHijriAr, weatherText, ...wxParts, hijriNote: "", hijriNoteColor: "var(--muted3,#7c93a6)", reflectOpacity: S.reflectFade,
+      rows: [], dots: [], events: [], fundLegend: [], nextAdhan: "", fundLegend: [], hasTimeChange: false, timeChangeDate: "", timeChanges: [], chgImminent: false, chgNoteSize: "16px", chgNoteColor: "var(--chgText,#f0d79a)", chgNoteBg: "transparent", chgChipBg: "var(--chgChipBg,rgba(216,178,90,.16))", chgChipLn: "1px solid var(--chgChipLn,rgba(216,178,90,.45))", reminderText: "", reminderSource: "", reminderArabic: "", reminderArabicSource: "", isReflection: false, stageSubtitle: "", hasBadge: false,
+      reminderIntro: "", reminderIntroArabic: "", hasDst: false, dstLine: "", dstSub: "", hasNotice: false, chgNoteLn: "none", reminderArabicSize: "2.15em",
+      reflectBox: this.reflectBox, reflectFit: this.reflectFit, rootRef: this.rootRef,
+      nextLabel: "—", nextArabic: "", nextIqLabel: "IQĀMAH / JAMĀ'AH", nextIqTime: "", nextIqTimeNum: "", nextIqTimeAp: "", nextIqNote: "", countdown: "",
+      countdownColor: "var(--ink,#fff)", nextKicker: "UP NEXT", nextAccent: "var(--gold,#d8b25a)", countdownLabel: "", praying: false,
+      fundCampaign: "", fundSub: "", fundPctStr: "", fundPctW: "0%", fundRaisedStr: "", fundGoalStr: "", fundBalanceStr: "", fundSegs: [],
+      stageTitle: "Welcome", stageBadge: "", stageBadgeColor: P.gold, stageEl: null };
+
+    if (!S.cfg || !S.prayer) return out;
+    const cfg = S.cfg;
+    const hj = this.hijriFromAnchors(now, cfg);
+    if (hj) {
+      out.dateHijri = hj.text;
+      if (hj.textAr) out.dateHijriAr = hj.textAr;
+      out.hijriNote = hj.pending
+        ? "Based on local moon sighting · next month pending tonight"
+        : hj.lastDay
+          ? "Based on local moon sighting · new month begins at Maghrib"
+          : "Based on local moon sighting";
+      out.hijriNoteColor = (hj.pending || hj.lastDay) ? "#f2cf7d" : "var(--ink5,#b7c8d6)";
+    } else {
+      out.hijriNote = "Awaiting moon-sighting confirmation — estimated";
+      out.hijriNoteColor = "#f2cf7d";
+    }
+
+    // ---- prayer schedule ----
+    const day = this.buildDay(now);
+    // Remembered for the Auto theme: daylight runs sunrise → Maghrib adhān.
+    this._sunMin = day.sun; this._magMin = day.mAdh;
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const dhuhrLabel = day.isFri ? "Jumu'ah" : "Dhuhr";
+    const dhuhrTime = day.isFri ? day.jum : day.dhuhr;
+    const dhuhrSub = day.isFri ? `Second Adhān & Khutbah · First Adhān ${this.fmt(day.jumAdh)}` : "Jamā'ah";
+
+    // jama'ah events for "next" (exclude sunrise)
+    // Each entry also carries its adhān time: 10 minutes before iqāmah, except
+    // Maghrib (adhān at sunset) and Jumu'ah (1st adhān from prayer-data.js).
+    const jamaa = [
+      { key: "Fajr", min: day.fajr, adh: day.fajr - 10 }, { key: "Dhuhr", min: day.dhuhr, adh: day.dhuhr - 10 },
+      { key: "Asr", min: day.asr, adh: day.asr - 10 }, { key: "Maghrib", min: day.mIq, adh: day.mAdh }, { key: "Ishā'", min: day.ishaa, adh: day.ishaa - 10 },
+    ];
+    if (day.isFri) jamaa.splice(1, 1, { key: "Jumu'ah", min: day.jum, adh: day.jumAdh }, { key: "Dhuhr", min: day.dhuhr, adh: day.dhuhr - 10 });
+    // How long each jamā'ah takes, so the card can say the prayer is happening
+    // NOW rather than counting down to one that has already started.
+    const DUR = { Fajr: 15, "Ishā'": 15, "Jumu'ah": 30 };
+    const durOf = (k) => DUR[k] || 10;
+    const current = jamaa.find(p => nowMin >= p.min && nowMin < p.min + durOf(p.key));
+
+    let next = jamaa.find(p => p.min > nowMin), tomorrow = false;
+    if (!next) { const t = new Date(now); t.setDate(t.getDate() + 1); const nd = this.buildDay(t); next = { key: "Fajr", min: nd.fajr, adh: nd.fajr - 10 }; tomorrow = true; }
+    // A prayer in progress takes over the card entirely.
+    const shown = current || next;
+    out.nextLabel = shown.key; out.nextArabic = this.AR[shown.key] || "";
+    const target = current ? current.min + durOf(current.key) : next.min;
+    let diff = target - nowMin - (now.getSeconds() ? 1 : 0); if (!current && tomorrow) diff += 1440;
+    let secLeft = Math.max(0, diff * 60 + (now.getSeconds() ? 60 - now.getSeconds() : 0));
+    const ch = Math.floor(secLeft / 3600), cm = Math.floor((secLeft % 3600) / 60), cs = secLeft % 60;
+    out.countdown = ch > 0 ? `${ch}h ${String(cm).padStart(2, "0")}m` : `${cm}m ${String(cs).padStart(2, "0")}s`;
+    // Last 15 minutes before a jamā'ah: countdown turns red. (Not while praying.)
+    out.countdownColor = !current && secLeft <= 15 * 60 ? "var(--red,#ff6252)" : "var(--ink,#fff)";
+    if (current) {
+      out.nextKicker = "PRAYING NOW — IN JAMĀ'AH";
+      out.nextAccent = "var(--greenLn,#5fd08a)";
+      out.nextIqLabel = current.key === "Jumu'ah" ? "SECOND ADHĀN & KHUṬBAH" : "JAMĀ'AH BEGAN";
+      out.nextIqTime = this.fmtLc(current.min);
+      { const p = this.splitAp(out.nextIqTime); out.nextIqTimeNum = p.num; out.nextIqTimeAp = p.ap; }
+      out.nextIqNote = "Please silence your phone";
+      out.countdown = "";
+      out.countdownLabel = "";
+      out.praying = true;
+    } else {
+      out.nextKicker = "UP NEXT";
+      out.nextAccent = "var(--gold,#d8b25a)";
+      const iqWord = next.key === "Jumu'ah" ? "SECOND ADHĀN & KHUṬBAH" : "IQĀMAH / JAMĀ'AH";
+      out.nextIqLabel = tomorrow ? iqWord + " \u00b7 TOMORROW" : iqWord;
+      out.nextIqTime = this.fmtLc(next.min);
+      { const p = this.splitAp(out.nextIqTime); out.nextIqTimeNum = p.num; out.nextIqTimeAp = p.ap; }
+      out.nextIqNote = next.adh > 0 ? (next.key === "Jumu'ah" ? `First Adhān ${this.fmtLc(next.adh)}` : `Adhān ${this.fmtLc(next.adh)}`) : "";
+      out.countdownLabel = "";
+    }
+    const activeKey = current ? current.key : (tomorrow ? "" : next.key);
+
+    const chg = this.upcomingChanges(now), dst = this.dstAhead(now);
+    out.hasDst = !!dst; out.dstLine = dst ? dst.title : ""; out.dstSub = dst ? dst.sub : "";
+    out.hasNotice = !!(chg || dst);
+    if (dst && !chg) { out.chgNoteColor = "#1b1404"; out.chgNoteBg = "#f2c14e"; out.chgNoteLn = "1px solid #f2c14e"; }
+    const chgMap = {};
+    if (chg) { out.hasTimeChange = true; out.timeChangeDate = chg.date; out.timeChanges = chg.list;
+               out.chgImminent = !!chg.imminent;
+               const hot = chg.imminent || !!dst;
+               out.chgNoteSize = hot ? "14px" : "15px";
+               out.chgNoteColor = hot ? "#1b1404" : "var(--chgText,#f0d79a)";
+               out.chgNoteBg = hot ? "#f2c14e" : "transparent";
+               out.chgNoteLn = hot ? "1px solid #f2c14e" : "1px solid transparent";
+               out.chgChipBg = hot ? "#f2c14e" : "var(--chgChipBg,rgba(216,178,90,.16))";
+               out.chgChipLn = hot ? "1px solid #f2c14e" : "1px solid var(--chgChipLn,rgba(216,178,90,.45))";
+               for (const c of chg.list) chgMap[c.label] = c.to; }
+
+    // `sub` may be a string (one line) or [line1, line2] — the "Begins …" and
+    // "Adhān …" halves each get their own line so neither ever wraps mid-phrase.
+    const mk = (label, time, sub, active, info, sep) => ({
+      label, arabic: this.AR[label] || "", time,
+      // AM/PM is set much smaller than the digits so the hour reads first.
+      timeNum: String(time).replace(/\s*(AM|PM)\s*$/i, ""),
+      timeAp: ((String(time).match(/(AM|PM)\s*$/i) || ["", ""])[1] || "").toUpperCase(),
+      sub1: Array.isArray(sub) ? sub[0] : sub, sub2: Array.isArray(sub) ? sub[1] : "", hasSub2: Array.isArray(sub) && !!sub[1],
+      // The chip drops the meridiem (a time never moves across AM/PM) so the
+      // widest row still fits when a change is pending.
+      hasChg: !!chgMap[label], chgTo: (chgMap[label] || "").replace(/\s*(AM|PM)\s*$/i, ""),
+      bg: active ? "var(--rowHi,rgba(82,166,220,.18))" : "transparent",
+      border: active ? "1px solid var(--rowHiLn,rgba(82,166,220,.4))" : "1px solid transparent",
+      labelColor: info ? P.muted : P.ink, timeColor: active ? P.blueLt : (info ? P.muted : P.ink),
+      // Jumu'ah sits under a clear gold rule, spaced off Ishā'. Its padding
+      // matches the other rows so its time lines up with theirs.
+      sep: !!sep,
+    });
+    const A = day.adh;
+    // Three distinct times per prayer: when the prayer BEGINS, the official ADHĀN
+    // (10 min after it begins — except Maghrib, where the adhān is at sunset), and
+    // the IQĀMAH (the large number on the right, from prayer-data.js).
+    // Adhān is called 10 minutes BEFORE the posted iqāmah (Maghrib excepted —
+    // its adhān is at sunset). "Begins" is the astronomical start from the sheet.
+    const sub = (k, iq) => A ? [`Begins ${this.fmt(A[k])}`, `Adhān ${this.fmt(iq - 10)}`] : ["Jamā'ah"];
+    out.rows = [
+      mk("Fajr", this.fmt(day.fajr), sub("fajr", day.fajr), activeKey === "Fajr"),
+      mk("Ishrāq", this.fmt(day.sun + 15), ["Sunrise " + this.fmt(day.sun)], false, true),
+      mk("Dhuhr", this.fmt(day.dhuhr), sub("dhuhr", day.dhuhr), activeKey === "Dhuhr"),
+      mk("Asr", this.fmt(day.asr), sub("asr", day.asr), activeKey === "Asr"),
+      mk("Maghrib", this.fmt(day.mIq), ["Begins & Adhān", this.fmt(day.mAdh)], activeKey === "Maghrib"),
+      mk("Ishā'", this.fmt(day.ishaa), sub("isha", day.ishaa), activeKey === "Ishā'"),
+      // Shown every day, not only on Friday — the congregation looks this up
+      // midweek to plan, and a row that vanishes for six days reads as broken.
+      mk("Jumu'ah", this.fmt(day.jum), [`1st Adhān ${this.fmt(day.jumAdh)}`, "2nd Adhān & Khutbah"], activeKey === "Jumu'ah", false, true),
+    ].filter(Boolean);
+
+    // ---- fundraising ----
+    // Sidebar thermometer tracks the current milestone ($250K Sept–Dec 2026)
+    // when one is set; otherwise the full campaign goal.
+    const f0 = cfg.fundraising, msS = f0.milestone;
+    const f = msS ? { ...f0, goal: msS.goal } : f0;
+    const raised = this.raisedTotal(f), pct = Math.min(100, (raised / f.goal) * 100);
+    out.fundCampaign = msS ? "Building 4 Interior \u2013 Phase I" : f.campaign;
+    out.fundSub = msS ? "September \u2013 December 2026" : "";
+    out.fundPctStr = Math.round(pct) + "%"; out.fundPctW = pct + "%";
+    out.fundRaisedStr = f.unit + Math.round(raised).toLocaleString(); out.fundGoalStr = f.unit + Math.round(f.goal).toLocaleString();
+    out.fundBalanceStr = f.unit + Math.round(Math.max(0, f.goal - raised)).toLocaleString();
+    const slices = this.fundSlices(f).cats;
+    out.fundSegs = slices.map(c => ({ w: ((c.amount / f.goal) * 100) + "%", color: c.color }));
+    const money = (n) => n >= 1000 ? f.unit + Math.round(n / 1000) + "k" : f.unit + Math.round(n).toLocaleString();
+    const short = (l) => String(l).replace(/^Advanced Tuition$/i, "Adv. Tuition");
+    out.fundLegend = slices.map(c => ({ label: short(c.label), amount: money(c.amount), color: c.color }))
+      .concat([{ label: f.balanceLabel || "Balance", amount: money(Math.max(0, f.goal - raised)), color: "var(--hair,rgba(255,255,255,.14))" }]);
+
+    // ---- reminder + events ----
+    const rem = cfg.reminders[S.reminderIdx % cfg.reminders.length];
+    out.reminderText = rem.text; out.reminderSource = rem.source;
+    out.reminderArabic = rem.arabic || ""; out.reminderArabicSource = rem.sourceArabic || "";
+    // Qur'an entries are attributed to Allah, everything else to the Prophet.
+    const isAyah = /qur'?an/i.test(rem.source || "");
+    out.reminderIntro = isAyah ? "Allah, the Exalted, said:" : "The Messenger of Allah ﷺ said:";
+    out.reminderIntroArabic = isAyah ? "قَالَ اللَّهُ تَعَالَى" : "قَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ";
+    // Longer passages step down in size so nothing ever overflows the box.
+    const bare = (rem.arabic || "").replace(/[\u064B-\u0652\u0670\u06DF-\u06E8\u2026\s]/g, "").length;
+    // Long passages get a smaller Arabic-to-English ratio; fitReflection() then
+    // scales the whole block to fill whatever room is left.
+    out.reminderArabicSize = bare <= 45 ? "2.15em" : bare <= 80 ? "1.9em" : "1.65em";
+    out.events = cfg.events.slice(0, 4);
+
+    // ---- stage ----
+    const slides = cfg.slides, active = slides[S.index % slides.length];
+    out.dots = slides.length < 2 ? [] : slides.map((_, i) => ({ w: i === S.index % slides.length ? "26px" : "8px", color: i === S.index % slides.length ? P.gold : "var(--dot,rgba(255,255,255,.28))", onClick: () => this.goTo(i) }));
+    const meta = this.stageMeta(active);
+    out.stageTitle = meta.title; out.stageBadge = meta.badge; out.stageBadgeColor = meta.badgeColor;
+    out.hasBadge = !!meta.badge;
+    out.stageSubtitle = meta.sub || "";
+    out.isReflection = active && active.type === "reflection";
+    // Driven from here rather than a lifecycle hook: renderVals always runs, and
+    // by this point _sunMin / _magMin are populated from today's schedule.
+    this.applyTheme();
+    const activeIdx = S.index % slides.length;
+    out.stageEl = [...this.buildWebLayers(cfg, activeIdx), this.buildStage(active, S.index, cfg)];
+    return out;
+  }
+
+  // Every live-website slide is mounted ONCE at startup and kept alive behind the
+  // stage, so it never re-loads (no "Unpacking…" splash) when the slide comes up.
+  // Stable React keys keep each iframe from remounting between renders.
+  buildWebLayers(cfg, activeIdx) {
+    const h = React.createElement;
+    const zooms = [this.props.webZoom1, this.props.webZoom2, this.props.webZoom3];
+    let webN = -1;
+    return cfg.slides.map((a, i) => {
+      if (a.type !== "web") return null;
+      webN++;
+      // Chrome-style zoom: render the page at a SMALL viewport, then blow it up to
+      // fill the stage. Higher zoom = smaller viewport = bigger text. Never cropped.
+      // Each live site has its OWN slider (1st site, 2nd site…) on top of the
+      // per-slide `zoom` baseline in content.js — they never affect each other.
+      const slider = zooms[webN] > 0 ? zooms[webN] : 1;
+      const zoom = (a.zoom || 1) * slider;
+      const baseW = a.nw || Math.round((a.aspect || 16 / 9) * 1080), baseH = a.nh || 1080;
+      const NW = Math.round(baseW / zoom), NH = Math.round(baseH / zoom);
+      const scale = this.STAGE_W / NW;
+      const dw = this.STAGE_W, dh = Math.round(NH * scale);
+      const on = i === activeIdx;
+      // Centred in the full panel, unless doing so would put the page within
+      // 30px of the slide-dot bar — then the box gives the dots their clearance.
+      const tight = (this.STAGE_H - dh) / 2 < 30;
+      const src = a.url + (a.url.includes("?") ? "&" : "?") + "v=" + this.state.webToken;
+      return h("div", { key: "web:" + a.url,
+        style: { position: "absolute", inset: 0, bottom: tight ? 30 : 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                 opacity: on ? 1 : 0, transition: "opacity .55s ease", pointerEvents: "none", zIndex: on ? 2 : 1 } },
+        h("div", { style: { width: dw, height: dh, position: "relative", overflow: "hidden", background: "#fff" } },
+          h("iframe", { src, title: a.title, style: { position: "absolute", left: 0, top: 0, width: NW, height: NH, border: 0, transform: `scale(${scale})`, transformOrigin: "top left", display: "block" }, loading: "eager", scrolling: "no" })));
+    }).filter(Boolean);
+  }
+
+  stageMeta(a) {
+    const P = this.P;
+    if (!a) return { title: "Welcome", badge: "", badgeColor: P.gold, sub: "" };
+    switch (a.type) {
+      case "web": return { title: a.title, badge: "● LIVE", badgeColor: "var(--greenLn,#5fd08a)", sub: "Updated live from islamicabc.com" };
+      case "welcome": return { title: "Islamic Academy of Burlington County", badge: "", badgeColor: P.gold, sub: "613 Sunset Rd, Burlington, NJ 08016" };
+      case "announcements": return { title: "Announcements", badge: "", badgeColor: P.gold, sub: "" };
+      case "scope": {
+        const f = this.state.cfg.fundraising || {};
+        return { title: a.title || f.campaign || "Scope of Work", badge: "SCOPE OF WORK", badgeColor: P.gold,
+          sub: a.sub || ("$" + Math.round((f.goal || 0) / 1000) + "K Campaign Goal") };
+      }
+      case "milestone": {
+        const f = this.state.cfg.fundraising, ms = f.milestone || { goal: 250000, label: "September \u2013 December 2026" };
+        const dn = ms.dinner, live = dn && (!dn.until || new Date().toISOString().slice(0, 10) <= dn.until);
+        return { title: "Building 4 Interior \u2013 Phase I", badge: live ? "DINNER \u00b7 SAT, NOV 14" : "FUNDRAISING", badgeColor: P.gold,
+          sub: "$" + Math.round(ms.goal / 1000) + "K by December  \u00b7  $" + Math.round(f.goal / 1000) + "K by August 2027" };
+        return { title: "", sub: f.campaign + "  \u00b7  part of the " + f.unit + Math.round(f.goal / 1000) + "K campaign" };
+      }
+      case "reflection": return { title: "Reflection", badge: "", badgeColor: P.gold, sub: "From the Qur'an and the Sunnah" };
+      case "fundraising": return { title: "Fundraising: " + this.state.cfg.fundraising.campaign + " ($" + Math.round(this.state.cfg.fundraising.goal / 1000) + "K)", badge: "DONATE", badgeColor: P.gold, sub: this.state.cfg.fundraising.zelleInfo || "" };
+      default: return { title: a.title || "", badge: "", badgeColor: P.gold, sub: "" };
+    }
+  }
+
+  buildStage(a, index, cfg) {
+    if (!a) return null;
+    const h = React.createElement, P = this.P;
+    const wrap = (children, extra) => h("div", { key: index, style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, animation: "fadein .55s ease", zIndex: 3, ...extra } }, children);
+
+    if (a.type === "welcome") {
+      return wrap(h("div", { style: { textAlign: "center", maxWidth: 1280, display: "flex", flexDirection: "column", alignItems: "center" } },
+        h("div", { style: { fontFamily: "'Noto Naskh Arabic',serif", fontSize: 34, color: P.blueLt, marginBottom: 22, letterSpacing: ".5px" } }, "بسم الله الرحمن الرحيم"),
+        h("div", { style: { background: "#fff", borderRadius: 14, padding: "10px 16px", display: "inline-flex", boxShadow: "0 10px 30px rgba(0,0,0,.35)" } },
+          h("img", { src: this.asset("assets/logo.png"), style: { height: 120, display: "block", objectFit: "contain" } })),
+        h("div", { dir: "rtl", style: { fontFamily: "'Noto Naskh Arabic',serif", fontSize: 66, color: P.ink, marginTop: 30, lineHeight: 1.45 } }, "السَّلامُ عَلَيْكُمْ"),
+        h("div", { dir: "rtl", style: { fontFamily: "'Noto Naskh Arabic',serif", fontSize: 58, color: P.gold, marginTop: 12, lineHeight: 1.5 } }, "أَهْلاً وَسَهْلاً وَمَرْحَباً"),
+        h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 44, color: P.gold, marginTop: 34, lineHeight: 1.3 } }, "Welcome to the Islamic Academy of Burlington County"),
+        h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 38, color: P.ink, marginTop: 34, lineHeight: 1.6 } }, "The First Pre-K to 12th Grade Islamic School in South Jersey"),
+        h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 38, color: P.ink, marginTop: 10, lineHeight: 1.6 } }, "Top Islamic School of the Greater Philadelphia Area")));
+    }
+
+    if (a.type === "web") return null;   // live sites are pre-loaded persistently (buildWebLayers)
+    if (a.type === "reflection") return null;   // rendered by the template overlay
+
+    if (a.type === "image") {
+      // Full-bleed but never cropped, and never under the slide-dot bar.
+      return wrap([
+        h("img", { key: "i", src: this.asset(a.src), style: { width: "100%", height: "100%", objectFit: "contain", display: "block" } }),
+        a.caption && h("div", { key: "c", style: { position: "absolute", bottom: 26, left: 0, right: 0, textAlign: "center", fontSize: 18, color: P.muted } }, a.caption),
+      ], a.bleed ? { padding: 0 } : { padding: "0 0 30px" });   // bleed: edge to edge, dots float over it
+    }
+
+    if (a.type === "scope") {
+      const items = a.items || [];
+      // Rooms may be plain strings (sheet rows) or {label,x,y} objects, where x/y
+      // are percentages on the plan image and earn a numbered pin.
+      const ov = this.pinOverride();
+      const rooms = (a.rooms || []).map((r, i) => {
+        const base = typeof r === "string" ? { label: r } : { ...r };
+        const o = ov && (ov.find(p => p.label === base.label) || ov[i]);
+        return o ? { ...base, x: o.x, y: o.y } : base;
+      });
+      const edit = !!this.state.pinEdit;
+      // Fixed bright gold + near-black numeral in both themes: the day --gold is a
+      // dark brown that disappeared against the plan and the blue page.
+      const num = (n, size) => h("div", { style: { width: size, height: size, borderRadius: "50%", background: "#ffc61a",
+        color: "#001427", fontSize: size * 0.62, fontWeight: 800, display: "flex", alignItems: "center",
+        justifyContent: "center", flex: "none", border: "2px solid #ffffff", boxShadow: "0 2px 6px rgba(0,0,0,.45)" } }, n);
+      const pill = (t, i) => h("div", { key: i, style: {
+        display: "flex", alignItems: "center", gap: 14, padding: "15px 26px", borderRadius: 999,
+        background: "var(--surf2,rgba(255,255,255,.80))", border: "1px solid var(--line2,rgba(255,255,255,.09))",
+        boxShadow: "0 4px 14px rgba(0,0,0,.18)" } },
+        h("div", { style: { width: 10, height: 10, borderRadius: "50%", background: P.gold, flex: "none" } }),
+        h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 30, color: P.ink, lineHeight: 1.2 } }, t));
+      return wrap(h("div", { style: { display: "grid", gridTemplateColumns: "1.05fr .95fr", gap: 34, width: "100%", height: "100%", alignItems: "center" } },
+        h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 12, minHeight: 0, height: "100%", justifyContent: "center" } },
+          h("div", { style: { position: "relative", display: "inline-block", maxWidth: "100%", maxHeight: "calc(100% - 34px)", minHeight: 0 } },
+            h("img", { src: this.asset(a.src), style: { maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block", borderRadius: 12 } }),
+            rooms.map((r, i) => (r.x == null || r.y == null) ? null :
+              h("div", { key: i, ref: null,
+                onPointerDown: edit ? ((e) => this.startPinDrag(e, rooms, i, e.currentTarget.parentNode)) : undefined,
+                style: { position: "absolute", left: r.x + "%", top: r.y + "%", transform: "translate(-50%,-50%)",
+                  cursor: edit ? "grab" : "default", touchAction: "none",
+                  outline: edit ? "2px solid " + P.blueLt : "none", outlineOffset: 2, borderRadius: "50%" } },
+                num(i + 1, 26))),
+            edit ? h("div", { style: { position: "absolute", inset: 0, border: "2px dashed " + P.blueLt, borderRadius: 12, pointerEvents: "none" } }) : null),
+          a.caption && h("div", { style: { fontSize: 20, letterSpacing: ".5px", color: P.ink5, fontWeight: 600, textAlign: "center" } }, a.caption)),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 16, minWidth: 0 } },
+          items.map(pill),
+          rooms.length ? h("div", { style: {
+            marginTop: 6, padding: "20px 26px", borderRadius: 18,
+            background: "var(--surf1,rgba(255,255,255,.56))", border: "1px solid var(--line2,rgba(255,255,255,.09))" } },
+            h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 28, color: P.gold, marginBottom: 12 } }, a.roomsTitle || "Floor 1 Finishing"),
+            h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "9px 24px" } },
+              rooms.map((r, i) => h("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, fontSize: 24, color: P.ink } },
+                num(i + 1, 24), r.label)))) : null,
+          edit ? h("div", { style: { marginTop: 4, padding: "14px 18px", borderRadius: 14, background: "rgba(0,0,0,.55)",
+            border: "1px solid " + P.blueLt, fontFamily: "ui-monospace,Menlo,monospace", fontSize: 13, lineHeight: 1.55, color: "#dff1ff" } },
+            h("div", { style: { fontSize: 14, fontWeight: 700, marginBottom: 6, color: P.blueLt } }, "PIN EDIT — drag pins · P to exit · paste into content.js"),
+            rooms.map((r, i) => h("div", { key: i }, "{ label: \"" + r.label + "\", x: " + r.x + ", y: " + r.y + " },"))) : null)));
+    }
+
+    if (a.type === "grid") {
+      const items = a.images || [];
+      return wrap(h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px 26px", width: "100%", height: "100%", alignContent: "center" } },
+        items.map((it, i) => h("div", { key: i, style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 9, minHeight: 0 } },
+          // Uniform framed tile: the floor-plan renders carry their own pale
+          // backdrop, which reads as a stray margin next to the photos unless
+          // every tile is the same box and the image fills it.
+          h("div", { style: { height: 282, width: "auto", maxWidth: "100%", borderRadius: 10, overflow: "hidden", boxShadow: "0 6px 18px rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center" } },
+            h("img", { src: this.asset(it.src), style: { height: "100%", width: "auto", maxWidth: "100%", objectFit: "contain", display: "block" } })),
+          h("div", { style: { textAlign: "center" } },
+            h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 21, color: P.ink, lineHeight: 1.25 } }, it.caption),
+            it.subcaption && h("div", { style: { fontSize: 16, color: P.muted, marginTop: 3 } }, it.subcaption))))));
+    }
+
+    if (a.type === "gallery") {
+      const imgs = a.images || [], sub = Math.floor(Date.now() / 5000) % Math.max(1, imgs.length);
+      // Each image can carry its own caption ({src, caption}) so the label always
+      // matches the plan on screen; a plain string image falls back to captionLines.
+      const item = imgs[sub], src = typeof item === "string" ? item : (item && item.src);
+      const lines = a.captionLines || (a.caption ? [a.caption] : []);
+      const cap = (item && item.caption) || lines[sub] || lines[0] || "";
+      const capSub = (item && item.subcaption) || "";
+      return wrap(h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, maxHeight: "100%" } },
+        h("img", { key: "g" + sub, src: this.asset(src), style: { maxWidth: "100%", maxHeight: 470, objectFit: "contain", borderRadius: 12, animation: "fadein .6s ease", boxShadow: "0 8px 26px rgba(0,0,0,.35)" } }),
+        h("div", { key: "c" + sub, style: { textAlign: "center", animation: "fadein .6s ease" } },
+          h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 30, color: P.ink, lineHeight: 1.3 } }, cap),
+          capSub && h("div", { style: { fontSize: 21, color: P.muted, marginTop: 6, lineHeight: 1.4 } }, capSub))));
+    }
+
+    if (a.type === "announcements") {
+      const list = (cfg.announcements || []).slice(0, 4);
+      // One card per row, stretched to share the height evenly — a 2-up grid
+      // leaves an obvious hole whenever the count is odd.
+      return wrap(h("div", { style: { display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 1180, height: "100%", justifyContent: "center", padding: "6px 0" } },
+        list.map((an, i) => h("div", { key: i, style: { background: "var(--surf2,rgba(255,255,255,.05))", border: "1px solid " + P.line, borderLeft: "4px solid " + P.gold, borderRadius: 14, padding: "24px 30px", flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center" } },
+          h("div", { style: { fontFamily: "'Marcellus',serif", fontSize: 32, marginBottom: 10, lineHeight: 1.15 } }, an.title),
+          h("div", { style: { fontSize: 21, color: "var(--ink3,#cddae5)", lineHeight: 1.45, textWrap: "pretty" } }, an.body)))));
+    }
+
+    if (a.type === "milestone") {
+      // The dinner flier as a lobby slide, with the $250K donut set inside the
+      // flier's campaign panel. Fixed light-blue paper in both themes; DAY tokens
+      // are applied locally so the shared donut/pills read dark-on-light.
+      const F = window.IABC_FUND, f = cfg.fundraising, ms = f.milestone || { goal: 250000 };
+      const fm = { ...f, goal: ms.goal, hole: 0.7, centerScale: 1.05, stack: true, legendScale: 0.68 };
+      const d = ms.dinner, today = new Date().toISOString().slice(0, 10);
+      const showDinner = d && (!d.until || today <= d.until);
+      const NAVY = P.ink, BROWN = P.gold, ORANGE = P.gold, SLATE = P.ink5, GREY = P.ink5, BAND = "#1E3A5F";
+      const serif = "'Cormorant Garamond',Georgia,serif";
+      const chip = { background: "var(--surf2,rgba(255,255,255,.08))", border: "1px solid var(--line2,rgba(255,255,255,.14))" };
+      const kicker = (t) => h("div", { style: { fontWeight: 700, fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", color: BROWN, textAlign: "center" } }, t);
+      const pin = (n, size) => h("div", { style: { width: size, height: size, borderRadius: "50%", background: "#ffc61a", border: "1.5px solid #fff", color: "#001427",
+        fontSize: size * 0.55, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, n);
+      const rooms = [["Lobby", 26.8, 62.5], ["Men\u2019s Musall\u0101 (relocated)", 31.6, 30.4], ["Wudu Area & Bathrooms (incl. gym showers)", 40.6, 64.5],
+        ["Cafeteria", 56.8, 86.5], ["Gymnasium", 64.5, 42.4], ["Activity Room \u2013 Exercise & Game Room", 44.7, 40.8]];
+      const scope = [["\u2744\uFE0F", "HVAC Systems"], ["\u{1F6BF}", "Rough Plumbing"], ["\u{1F50C}", "Rough Electrical"], ["\u{1F6E1}\uFE0F", "Insulation"]];
+      const work = [["\u{1F6BF}", "Plumbing", "Rough work started"], ["\u26A1", "Electrical", "Rough work started"], ["\u2744\uFE0F", "HVAC Systems"],
+        ["\u{1F6E1}\uFE0F", "Interior Insulation"], ["\u{1F9F1}", "Drywall"], ["\u{1FAB5}", "Flooring"]];
+      const dayNum = showDinner ? (d.date.match(/(\d+),/) || [])[1] : null;
+      const ord = (n) => n + (n == 1 || n == 21 || n == 31 ? "st" : n == 2 || n == 22 ? "nd" : n == 3 || n == 23 ? "rd" : "th");
+      const dot = () => h("span", { style: { width: 6, height: 6, borderRadius: "50%", background: ORANGE, alignSelf: "center", flex: "none" } });
+      // Full-height leaderboard: as many ranked students as fit (~22 rows at full
+      // size); if ties push past that, every row scales down to keep them all.
+      const LB = window.IABC_LEADERBOARD, LB_FIT = 22;
+      let lbRows = LB ? LB.top(LB_FIT) : [];
+      const lbK = Math.min(1, LB_FIT / Math.max(1, lbRows.length));
+      const lbGrid = { display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 52px 60px 118px 96px", columnGap: 6 };
+      const panel = { minHeight: 0, minWidth: 0, border: "1px solid var(--line2,rgba(255,255,255,.14))", borderRadius: 12, background: "var(--surf1,rgba(255,255,255,.05))", overflow: "hidden" };
+      const board = lbRows.length ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 3 * lbK, padding: "16px 14px 14px" } },
+          h("div", { style: { textAlign: "center", fontWeight: 800, fontSize: 30, letterSpacing: "-0.01em", lineHeight: 1.05 } }, "Student Fundraising Leaderboard"),
+          h("div", { style: { textAlign: "center", fontSize: 16, fontWeight: 700, color: BROWN, marginBottom: 6 } }, LB.rule),
+          h("div", { style: { ...lbGrid, padding: "0 12px 3px", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.06em", lineHeight: 1.15, alignItems: "end", textTransform: "uppercase", color: SLATE, flex: "none" } },
+            ["Rank", "Student", "Family tickets", "Individual tickets", "Donations", "Total points"].map((t, k) => h("div", { key: k, style: { textAlign: k > 1 ? "right" : "left" } }, t))),
+          h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 2 * lbK, overflow: "hidden" } }, lbRows.map((r, k) => {
+            const hi = r.rank <= 3, M = LB.MEDALS[r.rank];
+            return h("div", { key: r.name, style: { ...lbGrid, alignItems: "center", padding: (3 * lbK) + "px 12px", borderRadius: 7, fontSize: 19 * lbK, flex: "none", fontWeight: hi ? 800 : 600,
+                background: hi ? M.row : (k % 2 ? "transparent" : "var(--surf2,rgba(255,255,255,.05))"),
+                border: hi ? "1px solid " + M.line : "1px solid transparent", fontVariantNumeric: "tabular-nums" } },
+              // Tied students share a number; their badges are outlined and joined by a
+              // vertical line so the group reads as one shared place.
+              h("div", { style: { position: "relative", alignSelf: "stretch", display: "flex", alignItems: "center" } },
+                // Line segments run between the circles (not through them), so the badge
+                // can stay unfilled and the number never has a line behind it.
+                r.tied && !hi && !r.tieFirst ? h("div", { style: { position: "absolute", left: 13.5 * lbK - 1, width: 2, background: "var(--gold,#d8b25a)", opacity: .75,
+                  top: -8, height: "calc(50% + 8px - " + (13.5 * lbK) + "px)" } }) : null,
+                r.tied && !hi && !r.tieLast ? h("div", { style: { position: "absolute", left: 13.5 * lbK - 1, width: 2, background: "var(--gold,#d8b25a)", opacity: .75,
+                  bottom: -8, height: "calc(50% + 8px - " + (13.5 * lbK) + "px)" } }) : null,
+                h("span", { style: { position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 27 * lbK, height: 27 * lbK, boxSizing: "border-box", borderRadius: 999, whiteSpace: "nowrap", fontSize: 15 * lbK, fontWeight: 800,
+                  background: hi ? M.badge : "transparent", color: hi ? "#001427" : NAVY,
+                  border: hi ? "1.5px solid #fff" : (r.tied ? "1.5px solid var(--gold,#d8b25a)" : "none"),
+                  boxShadow: hi ? M.glow + ", inset 0 1px 1px rgba(255,255,255,.8)" : "none" } }, r.rankStr)),
+              // Long names (e.g. "Muhammad Behruz Tirkashboev") shrink just enough to fit
+              // on one line instead of being cut off with "…".
+              h("div", { style: { lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                fontSize: Math.min(19 * lbK, 440 / Math.max(1, String(r.name).length)) } }, r.name),
+              h("div", { style: { textAlign: "right" } }, r.f),
+              h("div", { style: { textAlign: "right" } }, r.i),
+              h("div", { style: { textAlign: "right", whiteSpace: "nowrap", fontSize: Math.min(19 * lbK, 150 / Math.max(1, String(r.dStr).length)) } }, r.dStr),
+              // Total points decides rank, so it is set larger and heavier than the other columns.
+              h("div", { style: { textAlign: "right", fontSize: 25 * lbK, fontWeight: 900, lineHeight: 1.05, color: hi ? NAVY : BROWN } }, r.ptsStr));
+          }))) : null;
+      // Phase I, compact: header band + plan thumbnail + scope list.
+      const phaseCard = h("div", { style: { ...panel, flex: showDinner ? "none" : "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column" } },
+        h("div", { style: { background: BAND, color: "#F3F7FB", padding: "9px 14px 10px", textAlign: "center" } },
+          h("div", { style: { fontWeight: 700, fontSize: 22, letterSpacing: "0.07em", textTransform: "uppercase" } }, "Building 4 Interior \u2013 Phase I"),
+          h("div", { style: { fontSize: 17, fontWeight: 700, color: "#F0D9A8", marginTop: 2 } }, f.unit + f.goal.toLocaleString() + " Goal \u00b7 Sept 2026\u2013Aug 2027"),
+          h("div", { style: { fontSize: 13.5, fontWeight: 600, color: "#DCE8F2", marginTop: 1 } }, "MS & HS Boys \u00b7 $1.8M total project \u00b7 Completion Summer 2028")),
+        !showDinner ? h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column", gap: 10, padding: "12px 14px" } },
+          h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", gap: 12, alignItems: "center" } },
+            h("div", { style: { position: "relative", flex: "0 1 56%", minWidth: 0, aspectRatio: "5 / 4", maxHeight: "100%" } },
+              h("img", { src: this.asset("assets/b4-floor1.png"), style: { width: "100%", height: "100%", objectFit: "cover", borderRadius: 10, display: "block" } }),
+              rooms.map((r, i) => h("div", { key: i, style: { position: "absolute", left: r[1] + "%", top: r[2] + "%", transform: "translate(-50%,-50%)" } }, pin(i + 1, 22)))),
+            h("div", { style: { flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 6 } },
+              rooms.map((r, i) => h("div", { key: i, style: { display: "flex", alignItems: "center", gap: 7, fontSize: 16.5, fontWeight: 700, lineHeight: 1.15 } }, pin(i + 1, 22), r[0])))),
+          h("div", { style: { flex: "none", display: "flex", flexDirection: "column", gap: 6 } },
+            kicker("Scope of Work"),
+            h("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 } },
+              work.map((w, i) => h("div", { key: i, style: { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, ...chip, border: "2px solid #ffc61a", minHeight: 58, minWidth: 0 } },
+                h("div", { style: { width: 34, height: 34, borderRadius: "50%", background: "#ffc61a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flex: "none" } }, w[0]),
+                h("div", { style: { minWidth: 0, display: "flex", flexDirection: "column" } },
+                  h("div", { style: { fontSize: 18, fontWeight: 800, lineHeight: 1.1 } }, w[1]),
+                  w[2] ? h("div", { style: { fontSize: 13, fontWeight: 700, color: BROWN, lineHeight: 1.15, marginTop: 2 } }, w[2]) : null)))))) :
+        h("div", { style: { display: "flex", gap: 14, alignItems: "center", padding: "10px 14px" } },
+          h("img", { src: this.asset("assets/b4-floor1.png"), style: { width: 320, aspectRatio: "5 / 4", objectFit: "cover", borderRadius: 8, display: "block", flex: "none" } }),
+          h("div", { style: { flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 5 } },
+            kicker("Scope of Work"),
+            scope.concat([["\u{1F4D0}", "Floor 1 Finishing"]]).map((s, i) => h("div", { key: i, style: { fontSize: 21, fontWeight: 700, whiteSpace: "nowrap" } }, s[0] + "\u00a0 " + s[1])))));
+      // Dinner, compact: title, date · time, tickets.
+      const dinnerCard = showDinner ? h("div", { style: { flex: "none", minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, textAlign: "center", padding: "14px 16px", borderRadius: 12,
+          background: "radial-gradient(ellipse 700px 300px at 50% 40%, #DCE8F2 0%, #B9D0E4 50%, #8FB3D4 100%)", border: "1.5px solid #F4A340", color: "#1E3A5F" } },
+        h("div", { style: { fontFamily: serif, fontWeight: 700, fontSize: 46, lineHeight: 1, whiteSpace: "nowrap" } }, d.title || "Fundraising Dinner"),
+        h("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "center", gap: "2px 10px" } },
+          h("span", { style: { fontFamily: serif, fontWeight: 700, fontSize: 30, lineHeight: 1.1, whiteSpace: "nowrap" } }, d.date.replace(/(\d+),/, (m, n) => ord(+n) + ",")),
+          h("span", { style: { width: 6, height: 6, borderRadius: "50%", background: "#F4A340", alignSelf: "center", flex: "none" } }),
+          h("span", { style: { fontWeight: 700, fontSize: 22, letterSpacing: "0.03em", color: "#7A4E0C", whiteSpace: "nowrap" } }, d.time)),
+        // Live countdown to the dinner (the stage re-renders every second).
+        (() => {
+          const base = Date.parse(String(d.date).replace(/^[A-Za-z]+,\s*/, ""));
+          const tm = String(d.time || "").match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/i);
+          if (isNaN(base)) return null;
+          const t = new Date(base);
+          if (tm) { let hh = +tm[1] % 12; if (/pm/i.test(tm[3] || "PM")) hh += 12; t.setHours(hh, +(tm[2] || 0), 0, 0); }
+          const left = t - Date.now();
+          if (left <= 0) return h("div", { style: { fontWeight: 800, fontSize: 24, color: "#7A4E0C" } }, left > -5 * 3600e3 ? "Happening now" : null);
+          const D = Math.floor(left / 864e5), H = Math.floor(left / 36e5) % 24, M = Math.floor(left / 6e4) % 60, S = Math.floor(left / 1e3) % 60;
+          const tile = (n, u) => h("div", { key: u, style: { display: "flex", flexDirection: "column", alignItems: "center", minWidth: 66, padding: "5px 8px 4px", borderRadius: 9, background: "#1E3A5F", color: "#fff", boxShadow: "0 2px 6px rgba(30,58,95,.3)" } },
+            h("span", { style: { fontSize: 30, fontWeight: 800, lineHeight: 1, fontVariantNumeric: "tabular-nums" } }, String(n).padStart(2, "0")),
+            h("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#F0D9A8", marginTop: 3 } }, u));
+          return h("div", { style: { display: "flex", gap: 8 } }, tile(D, D === 1 ? "Day" : "Days"), tile(H, "Hrs"), tile(M, "Min"), tile(S, "Sec"));
+        })(),
+        d.tickets ? h("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+          h("span", { style: { fontSize: 17, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A4E0C" } }, "Tickets"),
+          d.tickets.map((t, i) => h("span", { key: i, style: { background: "rgba(255,255,255,.9)", border: "1.3px solid rgba(30,58,95,.4)", borderRadius: 999, padding: "5px 16px", fontSize: 21, fontWeight: 700, color: "#1E3A5F" } }, t))) : null) : null;
+      const donutBlock = h("div", { style: { flex: "1 1 auto", minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, overflow: "hidden" } },
+        h("div", { style: { fontWeight: 700, fontSize: 17, letterSpacing: "0.08em", textTransform: "uppercase", color: BROWN, textAlign: "center" } }, "First Milestone \u00b7 Sept \u2013 Dec 2026"),
+        h("div", { style: { fontWeight: 800, fontSize: 32, letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: 8 } }, f.unit + ms.goal.toLocaleString() + " by December"),
+        (() => { const sl = F.slices(fm); return h("div", { style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "0 10px" } },
+          F.donut(h, sl.raised > 0 ? sl.all : [], fm.goal, 332, F.centerBlock(h, fm, sl, 0.82), fm.hole, "drop-shadow(0 3px 6px rgba(0,0,0,.35))"), F.legend(h, sl, 0.76)); })());
+      // Left: leaderboard top-to-bottom. Right: Phase I → dinner → donut.
+      return wrap(h("div", { style: { width: "100%", height: "100%", display: "grid", gridTemplateColumns: "minmax(0,1.08fr) minmax(0,1fr)", gap: 22, padding: 20,
+          fontFamily: "'Public Sans',sans-serif", color: NAVY, overflow: "hidden", boxSizing: "border-box" } },
+        board,
+        h("div", { style: { minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 } }, phaseCard, dinnerCard, donutBlock)), { padding: 0 });
+    }
+
+    if (a.type === "fundraising") {
+      // Shared with "Fundraising Graphics.dc.html" — edit fund-graphics.js once
+      // and the TV, the shareable pie and the shareable slide all follow.
+      return wrap(window.IABC_FUND.slide(h, cfg.fundraising, (s) => this.asset(s), 0.93));
+    }
+
+    if (a.type === "html") {
+      return wrap(h("div", { style: { width: "100%", height: "100%", overflow: "hidden" }, dangerouslySetInnerHTML: { __html: a.html || "" } }));
+    }
+    return wrap(h("div", { style: { color: P.muted } }, "Unknown slide type: " + a.type));
+  }
+
+  weatherIcon(c) {
+    if (c === 0) return "☀";
+    if (c <= 2) return "⛅";
+    if (c === 3) return "☁";
+    if (c <= 48) return "🌫";
+    if (c <= 67) return "🌧";
+    if (c <= 77) return "❄";
+    if (c <= 82) return "🌦";
+    if (c <= 86) return "❄";
+    if (c >= 95) return "⛈";
+    return "☁";
+  }
+
+  weatherLabel(c) {
+    if (c === 0) return "Clear"; if (c <= 2) return "Partly Cloudy"; if (c === 3) return "Overcast";
+    if (c <= 48) return "Fog"; if (c <= 57) return "Drizzle"; if (c <= 67) return "Rain";
+    if (c <= 77) return "Snow"; if (c <= 82) return "Showers"; if (c <= 86) return "Snow"; if (c >= 95) return "Storms";
+    return "";
+  }
+}
+</script>
+</body>
+</html>
