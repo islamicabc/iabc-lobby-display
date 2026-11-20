@@ -5,6 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IABC Lobby Display</title>
 <link rel="icon" href="assets/icon.png">
+<script>
+// iabc-remote-refresh
+// 1) The display checks version.txt every minute. When its number changes (edit
+//    version.txt on GitHub), the page reloads itself, so changes go live on demand.
+// 2) Safety net: it also reloads around 2:00 AM each night.
+// Either way it reloads only if the site answered, so a Wi-Fi outage can never
+// leave the TV on an error page.
+(function () {
+  var POLL = window.IABC_POLL_MS || 60000, seen = null;
+  function check() {
+    fetch("version.txt?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (t) {
+        if (t == null) return;
+        t = t.trim();
+        if (seen === null) seen = t; else if (t !== seen) location.reload();
+      }).catch(function () {});
+  }
+  check(); setInterval(check, POLL);
+  function msUntil2am() {
+    var n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate(), 2, 0, 0);
+    if (t <= n) t.setDate(t.getDate() + 1);
+    return t - n + Math.floor(Math.random() * 60000);
+  }
+  function nightly() {
+    fetch("version.txt?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (r.ok) location.reload(); else setTimeout(nightly, 600000); })
+      .catch(function () { setTimeout(nightly, 600000); });
+  }
+  setTimeout(nightly, msUntil2am());
+})();
+</script>
 <script src="./vendor/react.js"></script>
 <script src="./vendor/react-dom.js"></script>
 <script src="./support.js"></script>
