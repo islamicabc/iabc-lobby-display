@@ -1206,7 +1206,7 @@ class Component extends DCLogic {
       const lbK = Math.min(1, LB_FIT / Math.max(1, lbRows.length));
       const lbGrid = { display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 52px 60px 118px 96px", columnGap: 6 };
       const panel = { minHeight: 0, minWidth: 0, border: "1px solid var(--line2,rgba(255,255,255,.14))", borderRadius: 12, background: "var(--surf1,rgba(255,255,255,.05))", overflow: "hidden" };
-      const per3 = Math.max(20, Math.ceil(lbRows.length / 3)), ck3 = Math.min(1, 20 / per3);
+      const per3 = Math.max(1, Math.ceil(lbRows.length / 3)), ck3 = Math.min(1, 20 / per3);
       const cols3 = [0, 1, 2].map(c => lbRows.slice(c * per3, (c + 1) * per3));
       const c3grid = { display: "grid", gridTemplateColumns: "30px minmax(0,1fr) 76px", columnGap: 4 };
       const board = lbRows.length ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 4, padding: "16px 14px 14px" } },
@@ -1216,16 +1216,19 @@ class Component extends DCLogic {
             cols3.map((col, ci) => h("div", { key: ci, style: { display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 } },
               h("div", { style: { ...c3grid, padding: "0 4px 3px", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: SLATE, flex: "none" } },
                 h("div", null, "Rank"), h("div", null, "Student"), h("div", { style: { textAlign: "right" } }, "Points")),
-              h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden" } },
+              h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "flex-start", overflow: "hidden" } },
                 col.map((r, k) => {
-                  const hi = r.rank <= 3, M = LB.MEDALS[r.rank], nm = String(r.short || r.name);
-                  return h("div", { key: r.name, style: { ...c3grid, alignItems: "center", padding: "2px 4px", borderRadius: 6, flex: "none", fontWeight: hi ? 800 : 600, fontSize: 22 * ck3,
+                  let hi = r.rank <= 3, M = LB.MEDALS[r.rank], nm = String(r.full || r.short || r.name); if (nm.length > 22 && r.short) nm = String(r.short);
+                  return h("div", { key: r.name, style: { ...c3grid, alignItems: "center", padding: "2px 4px", borderRadius: 6, flex: "1 1 0", minHeight: 0, maxHeight: 52, boxSizing: "border-box", fontWeight: hi ? 800 : 600, fontSize: 22 * ck3,
                       background: hi ? M.row : (k % 2 ? "transparent" : "var(--surf2,rgba(255,255,255,.05))"),
                       border: hi ? "1px solid " + M.line : "1px solid transparent", fontVariantNumeric: "tabular-nums" } },
-                    h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 26, height: 26, boxSizing: "border-box", borderRadius: 999, fontSize: 14, fontWeight: 800,
+                    h("div", { style: { position: "relative", alignSelf: "stretch", display: "flex", alignItems: "center" } },
+                      r.tied && !hi && !r.tieFirst ? h("div", { style: { position: "absolute", left: 12, width: 2, top: -10, height: 10, background: "var(--gold,#d8b25a)", opacity: .8 } }) : null,
+                      r.tied && !hi && !r.tieLast ? h("div", { style: { position: "absolute", left: 12, width: 2, bottom: -10, height: 10, background: "var(--gold,#d8b25a)", opacity: .8 } }) : null,
+                      h("span", { style: { position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 26, height: 26, boxSizing: "border-box", borderRadius: 999, fontSize: 14, fontWeight: 800,
                       background: hi ? M.badge : "transparent", color: hi ? "#001427" : NAVY,
-                      border: hi ? "1.5px solid #fff" : (r.tied ? "1.5px solid var(--gold,#d8b25a)" : "none") } }, r.rankStr),
-                    h("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1, fontSize: Math.min(21 * ck3, 270 / Math.max(1, nm.length)) } }, nm),
+                      border: hi ? "1.5px solid #fff" : (r.tied ? "1.5px solid var(--gold,#d8b25a)" : "none") } }, r.rankStr)),
+                    h("div", { style: { overflow: "hidden", overflowWrap: "anywhere", lineHeight: 1.08, fontSize: (nm.length <= 13 ? 21 : 18.5) * ck3 } }, nm),
                     h("div", { style: { textAlign: "right", whiteSpace: "nowrap", fontSize: 20 * ck3, fontWeight: 900, color: hi ? NAVY : BROWN } }, r.ptsStr));
                 })))))) : null;
       const boardOld = false ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 3 * lbK, padding: "16px 14px 14px" } },

@@ -100,7 +100,7 @@ var LEADERBOARD_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1tM
     const last = (n) => { const p = String(n).trim().split(/\s+/); return (p[p.length - 1] + " " + p.join(" ")).toLowerCase(); };
     list.sort((a, b) => b.pts - a.pts || last(a.name).localeCompare(last(b.name)));
     let rank = 0;
-    list.forEach((r, k) => { if (!k || r.pts !== list[k - 1].pts) rank++; r.rank = rank; });
+    list.forEach((r, k) => { if (!k || r.pts !== list[k - 1].pts) rank = k + 1; r.rank = rank; });
     const count = {};
     list.forEach(r => { count[r.rank] = (count[r.rank] || 0) + 1; });
     list.forEach((r, k) => { r.tied = count[r.rank] > 1; r.rankStr = String(r.rank);
@@ -109,11 +109,11 @@ var LEADERBOARD_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1tM
     // Display name: last name shortened to an initial ("Abdul Ahad H."). The sheet may
     // abbreviate Abdul Ahad as "A. Ahad", so restore it. If two students would end up
     // with the same short name, both keep their full last name.
-    const fullName = (n) => String(n).trim().replace(/^A\.\s*Ahad\b/i, "Abdul Ahad").replace(/^Mirzoyahyoxon\b/i, "Yahyo");
+    const fullName = (n) => String(n).trim().replace(/^A\.\s*Ahad\b/i, "Abdul Ahad");
     const abbr = (n) => { const p = n.split(/\s+/); if (p.length < 2) return n; const yus = /^muhammad\s+yusuf\s+\S/i.test(n); const first = yus ? [p[0]] : p.slice(0, -1); if (!yus && p.length > 2 && /^(muhammad|mehmet)$/i.test(p[0])) first[0] = "M."; return first.join(" ") + " " + p[p.length - 1].charAt(0).toUpperCase() + "."; };
     const shortCount = {};
     list.forEach(r => { const s = abbr(fullName(r.name)).toLowerCase(); shortCount[s] = (shortCount[s] || 0) + 1; });
-    list.forEach(r => { const full = fullName(r.name), s = abbr(full); r.short = shortCount[s.toLowerCase()] > 1 ? full : s; });
+    list.forEach(r => { const full = fullName(r.name), s = abbr(full); r.full = full; r.short = shortCount[s.toLowerCase()] > 1 ? full : s; });
     return list;
   }
 
