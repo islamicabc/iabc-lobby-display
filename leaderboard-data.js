@@ -110,7 +110,7 @@ var LEADERBOARD_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1tM
     // abbreviate Abdul Ahad as "A. Ahad", so restore it. If two students would end up
     // with the same short name, both keep their full last name.
     const fullName = (n) => String(n).trim().replace(/^A\.\s*Ahad\b/i, "Abdul Ahad").replace(/^Mirzoyahyoxon\b/i, "Yahyo");
-    const abbr = (n) => { const p = n.split(/\s+/); return p.length < 2 ? n : (/^muhammad$/i.test(p[0]) ? p[0] : p.slice(0, -1).join(" ")) + " " + p[p.length - 1].charAt(0).toUpperCase() + "."; };
+    const abbr = (n) => { const p = n.split(/\s+/); if (p.length < 2) return n; const yus = /^muhammad\s+yusuf\s+\S/i.test(n); const first = yus ? [p[0]] : p.slice(0, -1); if (!yus && p.length > 2 && /^(muhammad|mehmet)$/i.test(p[0])) first[0] = "M."; return first.join(" ") + " " + p[p.length - 1].charAt(0).toUpperCase() + "."; };
     const shortCount = {};
     list.forEach(r => { const s = abbr(fullName(r.name)).toLowerCase(); shortCount[s] = (shortCount[s] || 0) + 1; });
     list.forEach(r => { const full = fullName(r.name), s = abbr(full); r.short = shortCount[s.toLowerCase()] > 1 ? full : s; });
