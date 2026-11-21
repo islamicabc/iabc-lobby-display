@@ -1201,12 +1201,34 @@ class Component extends DCLogic {
       const dot = () => h("span", { style: { width: 6, height: 6, borderRadius: "50%", background: ORANGE, alignSelf: "center", flex: "none" } });
       // Full-height leaderboard: as many ranked students as fit (~22 rows at full
       // size); if ties push past that, every row scales down to keep them all.
-      const LB = window.IABC_LEADERBOARD, LB_FIT = 22;
+      const LB = window.IABC_LEADERBOARD, LB_FIT = 60;
       let lbRows = LB ? LB.top(LB_FIT) : [];
       const lbK = Math.min(1, LB_FIT / Math.max(1, lbRows.length));
       const lbGrid = { display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 52px 60px 118px 96px", columnGap: 6 };
       const panel = { minHeight: 0, minWidth: 0, border: "1px solid var(--line2,rgba(255,255,255,.14))", borderRadius: 12, background: "var(--surf1,rgba(255,255,255,.05))", overflow: "hidden" };
-      const board = lbRows.length ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 3 * lbK, padding: "16px 14px 14px" } },
+      const per3 = Math.max(20, Math.ceil(lbRows.length / 3)), ck3 = Math.min(1, 20 / per3);
+      const cols3 = [0, 1, 2].map(c => lbRows.slice(c * per3, (c + 1) * per3));
+      const c3grid = { display: "grid", gridTemplateColumns: "30px minmax(0,1fr) 76px", columnGap: 4 };
+      const board = lbRows.length ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 4, padding: "16px 14px 14px" } },
+          h("div", { style: { textAlign: "center", fontWeight: 800, fontSize: 30, letterSpacing: "-0.01em", lineHeight: 1.05 } }, "Student Fundraising Leaderboard"),
+          h("div", { style: { textAlign: "center", fontSize: 16, fontWeight: 700, color: BROWN, marginBottom: 6 } }, LB.rule),
+          h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", columnGap: 10, overflow: "hidden" } },
+            cols3.map((col, ci) => h("div", { key: ci, style: { display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 } },
+              h("div", { style: { ...c3grid, padding: "0 4px 3px", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: SLATE, flex: "none" } },
+                h("div", null, "Rank"), h("div", null, "Student"), h("div", { style: { textAlign: "right" } }, "Points")),
+              h("div", { style: { flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", overflow: "hidden" } },
+                col.map((r, k) => {
+                  const hi = r.rank <= 3, M = LB.MEDALS[r.rank], nm = String(r.short || r.name);
+                  return h("div", { key: r.name, style: { ...c3grid, alignItems: "center", padding: "2px 4px", borderRadius: 6, flex: "none", fontWeight: hi ? 800 : 600, fontSize: 22 * ck3,
+                      background: hi ? M.row : (k % 2 ? "transparent" : "var(--surf2,rgba(255,255,255,.05))"),
+                      border: hi ? "1px solid " + M.line : "1px solid transparent", fontVariantNumeric: "tabular-nums" } },
+                    h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 26, height: 26, boxSizing: "border-box", borderRadius: 999, fontSize: 14, fontWeight: 800,
+                      background: hi ? M.badge : "transparent", color: hi ? "#001427" : NAVY,
+                      border: hi ? "1.5px solid #fff" : (r.tied ? "1.5px solid var(--gold,#d8b25a)" : "none") } }, r.rankStr),
+                    h("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.1, fontSize: Math.min(21 * ck3, 270 / Math.max(1, nm.length)) } }, nm),
+                    h("div", { style: { textAlign: "right", whiteSpace: "nowrap", fontSize: 20 * ck3, fontWeight: 900, color: hi ? NAVY : BROWN } }, r.ptsStr));
+                })))))) : null;
+      const boardOld = false ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 3 * lbK, padding: "16px 14px 14px" } },
           h("div", { style: { textAlign: "center", fontWeight: 800, fontSize: 30, letterSpacing: "-0.01em", lineHeight: 1.05 } }, "Student Fundraising Leaderboard"),
           h("div", { style: { textAlign: "center", fontSize: 16, fontWeight: 700, color: BROWN, marginBottom: 6 } }, LB.rule),
           h("div", { style: { ...lbGrid, padding: "0 12px 3px", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.06em", lineHeight: 1.15, alignItems: "end", textTransform: "uppercase", color: SLATE, flex: "none" } },
@@ -1232,7 +1254,7 @@ class Component extends DCLogic {
               // Long names (e.g. "Muhammad Behruz Tirkashboev") shrink just enough to fit
               // on one line instead of being cut off with "…".
               h("div", { style: { lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                fontSize: Math.min(19 * lbK, 440 / Math.max(1, String(r.name).length)) } }, r.name),
+                fontSize: Math.min(19 * lbK, 440 / Math.max(1, String(r.short || r.name).length)) } }, r.short || r.name),
               h("div", { style: { textAlign: "right" } }, r.f),
               h("div", { style: { textAlign: "right" } }, r.i),
               h("div", { style: { textAlign: "right", whiteSpace: "nowrap", fontSize: Math.min(19 * lbK, 150 / Math.max(1, String(r.dStr).length)) } }, r.dStr),
@@ -1261,12 +1283,12 @@ class Component extends DCLogic {
                   h("div", { style: { fontSize: 18, fontWeight: 800, lineHeight: 1.1 } }, w[1]),
                   w[2] ? h("div", { style: { fontSize: 13, fontWeight: 700, color: BROWN, lineHeight: 1.15, marginTop: 2 } }, w[2]) : null)))))) :
         h("div", { style: { display: "flex", gap: 14, alignItems: "center", padding: "10px 14px" } },
-          h("img", { src: this.asset("assets/b4-floor1.png"), style: { width: 320, aspectRatio: "5 / 4", objectFit: "cover", borderRadius: 8, display: "block", flex: "none" } }),
+          h("img", { src: this.asset("assets/b4-floor1.png"), style: { width: 180, aspectRatio: "5 / 4", objectFit: "cover", borderRadius: 8, display: "block", flex: "none" } }),
           h("div", { style: { flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 5 } },
             kicker("Scope of Work"),
-            scope.concat([["\u{1F4D0}", "Floor 1 Finishing"]]).map((s, i) => h("div", { key: i, style: { fontSize: 21, fontWeight: 700, whiteSpace: "nowrap" } }, s[0] + "\u00a0 " + s[1])))));
+            scope.concat([["\u{1F4D0}", "Floor 1 Finishing"]]).map((s, i) => h("div", { key: i, style: { fontSize: 19, fontWeight: 700, whiteSpace: "nowrap" } }, s[0] + "\u00a0 " + s[1])))));
       // Dinner, compact: title, date · time, tickets.
-      const dinnerCard = showDinner ? h("div", { style: { flex: "none", minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, textAlign: "center", padding: "14px 16px", borderRadius: 12,
+      const dinnerCard = showDinner ? h("div", { style: { flex: "none", minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, textAlign: "center", padding: "10px 16px", borderRadius: 12,
           background: "radial-gradient(ellipse 700px 300px at 50% 40%, #DCE8F2 0%, #B9D0E4 50%, #8FB3D4 100%)", border: "1.5px solid #F4A340", color: "#1E3A5F" } },
         h("div", { style: { fontFamily: serif, fontWeight: 700, fontSize: 46, lineHeight: 1, whiteSpace: "nowrap" } }, d.title || "Fundraising Dinner"),
         h("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "center", gap: "2px 10px" } },
@@ -1293,11 +1315,11 @@ class Component extends DCLogic {
           d.tickets.map((t, i) => h("span", { key: i, style: { background: "rgba(255,255,255,.9)", border: "1.3px solid rgba(30,58,95,.4)", borderRadius: 999, padding: "5px 16px", fontSize: 21, fontWeight: 700, color: "#1E3A5F" } }, t))) : null) : null;
       const donutBlock = h("div", { style: { flex: "1 1 auto", minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, overflow: "hidden" } },
         h("div", { style: { fontWeight: 700, fontSize: 17, letterSpacing: "0.08em", textTransform: "uppercase", color: BROWN, textAlign: "center" } }, "First Milestone \u00b7 Sept \u2013 Dec 2026"),
-        h("div", { style: { fontWeight: 800, fontSize: 32, letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: 8 } }, f.unit + ms.goal.toLocaleString() + " by December"),
-        (() => { const sl = F.slices(fm); return h("div", { style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "0 10px" } },
-          F.donut(h, sl.raised > 0 ? sl.all : [], fm.goal, 332, F.centerBlock(h, fm, sl, 0.82), fm.hole, "drop-shadow(0 3px 6px rgba(0,0,0,.35))"), F.legend(h, sl, 0.76)); })());
+        h("div", { style: { fontWeight: 800, fontSize: 32, letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: 2 } }, f.unit + ms.goal.toLocaleString() + " by December"),
+        (() => { const sl = F.slices(fm); return h("div", { style: { width: "100%", display: "flex", alignItems: "center", flexDirection: "column", justifyContent: "center", gap: 6, padding: "0 10px" } },
+          F.donut(h, sl.raised > 0 ? sl.all : [], fm.goal, 300, F.centerBlock(h, fm, sl, 0.74), fm.hole, "drop-shadow(0 3px 6px rgba(0,0,0,.35))"), h("div", { style: { width: "100%" } }, F.legend(h, sl, 0.66, true))); })());
       // Left: leaderboard top-to-bottom. Right: Phase I → dinner → donut.
-      return wrap(h("div", { style: { width: "100%", height: "100%", display: "grid", gridTemplateColumns: "minmax(0,1.08fr) minmax(0,1fr)", gap: 22, padding: 20,
+      return wrap(h("div", { style: { width: "100%", height: "100%", display: "grid", gridTemplateColumns: "minmax(0,1.8fr) minmax(0,1fr)", gap: 22, padding: 20,
           fontFamily: "'Public Sans',sans-serif", color: NAVY, overflow: "hidden", boxSizing: "border-box" } },
         board,
         h("div", { style: { minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 } }, phaseCard, dinnerCard, donutBlock)), { padding: 0 });
