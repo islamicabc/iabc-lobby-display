@@ -1228,7 +1228,7 @@ class Component extends DCLogic {
                       h("span", { style: { position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 26, height: 26, boxSizing: "border-box", borderRadius: 999, fontSize: 14, fontWeight: 800,
                       background: hi ? M.badge : "transparent", color: hi ? "#001427" : NAVY,
                       border: hi ? "1.5px solid #fff" : (r.tied ? "1.5px solid var(--gold,#d8b25a)" : "none") } }, r.rankStr)),
-                    h("div", { style: { overflow: "hidden", overflowWrap: "anywhere", lineHeight: 1.08, fontSize: (nm.length <= 13 ? 21 : 18.5) * ck3 } }, nm),
+                    h("div", { style: { overflow: "hidden", overflowWrap: "anywhere", lineHeight: 1.08, fontSize: (nm.length <= 11 ? 21 : 18.5) * ck3 } }, nm),
                     h("div", { style: { textAlign: "right", whiteSpace: "nowrap", fontSize: 20 * ck3, fontWeight: 900, color: hi ? NAVY : BROWN } }, r.ptsStr));
                 })))))) : null;
       const boardOld = false ? h("div", { style: { ...panel, display: "flex", flexDirection: "column", gap: 3 * lbK, padding: "16px 14px 14px" } },
